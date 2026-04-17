@@ -1,4 +1,3 @@
-// created on 1/11/2005 at 9:43 PM
 /*
  *   Copyright (c) 2005, Alexandros Frantzis (alf82 [at] freemail [dot] gr)
  *
@@ -29,13 +28,12 @@ using Bless.Util;
 namespace Bless.Gui {
 
 ///<summary>A widget that displays data from a buffer</summary>
-public class DataViewDisplay : Gtk.VBox {
+public class DataViewDisplay : Gtk.Box {
 	Layout layout;
-	Gtk.HBox hbox;
+	Gtk.Box hbox;
 	Gtk.DrawingArea drawingArea;
-	//static Gtk.DrawingArea drawingArea=new Gtk.DrawingArea();
 	Gtk.VScrollbar vscroll;
-	Gtk.HBox fileChangedBar;
+	FileChangedBar fileChangedBar;
 	bool widgetRealized;
 
 	DataViewControl dvControl;
@@ -43,18 +41,14 @@ public class DataViewDisplay : Gtk.VBox {
 
 	public enum ShowType { Closest, Start, End, Cursor }
 
-	public DataView View {
-		get { return dataView;}
-	}
+	public DataView View { get { return dataView; } }
 
 	public DataViewControl Control {
 		set {
 			DisconnectFromControl();
-			// connect new control
 			dvControl = value;
 			ConnectToControl();
 		}
-
 		get { return dvControl; }
 	}
 
@@ -62,18 +56,11 @@ public class DataViewDisplay : Gtk.VBox {
 		get { return layout; }
 
 		set {
-			// temporarily save previous layout
 			Layout prevLayout = layout;
-
-			// dispose Area pixmaps
 			layout.DisposePixmaps();
-
-			// set new layout
 			layout = value;
-
-			// set buffer
 			layout.AreaGroup.Buffer = dataView.Buffer;
-			
+
 			if (widgetRealized) {
 				layout.Realize(drawingArea);
 				Gdk.Rectangle alloc = drawingArea.Allocation;
@@ -81,25 +68,19 @@ public class DataViewDisplay : Gtk.VBox {
 
 				long prevOffset = 0;
 
-				// Setup new areas according to the old ones
 				if (prevLayout != null && prevLayout.AreaGroup.Areas.Count > 0) {
 					layout.AreaGroup.SetCursor(prevLayout.AreaGroup.CursorOffset, 0);
 					layout.AreaGroup.Selection = prevLayout.AreaGroup.Selection;
-				}
-				else {
+				} else {
 					layout.AreaGroup.SetCursor(0, 0);
 				}
 
-				// make sure cursor is visible
 				MakeOffsetVisible(prevOffset, ShowType.Closest);
 			}
 		}
-
 	}
 
-	internal Gtk.VScrollbar VScroll {
-		get { return vscroll; }
-	}
+	internal Gtk.VScrollbar VScroll { get { return vscroll; } }
 
 	public new bool HasFocus {
 		get { return drawingArea.HasFocus; }
@@ -107,43 +88,43 @@ public class DataViewDisplay : Gtk.VBox {
 	}
 
 	///<summary>Create a DataViewDisplay</summary>
-	public DataViewDisplay(DataView dv)
+	public DataViewDisplay(DataView dv) : base(Gtk.Orientation.Vertical, 0)
 	{
 		dataView = dv;
 
-		// load the default layout from the data directory
 		layout = new Layout(FileResourcePath.GetDataPath("bless-default.layout"));
 
-		// initialize scrollbar
-		Gtk.Adjustment
-		adj = new Gtk.Adjustment(0.0, 0.0, 1.0, 1.0, 10.0, 0.0);
+		Gtk.Adjustment adj = new Gtk.Adjustment(0.0, 0.0, 1.0, 1.0, 10.0, 0.0);
 		vscroll = new Gtk.VScrollbar(adj);
-
 		adj.ValueChanged += OnScrolled;
 
-		// initialize drawing area
 		drawingArea = new Gtk.DrawingArea();
-		drawingArea.Realized += OnRealized;
-		drawingArea.ExposeEvent += OnExposed;
+		drawingArea.Realized      += OnRealized;
+		drawingArea.Drawn         += OnDrawn;
 		drawingArea.ConfigureEvent += OnConfigured;
-		drawingArea.ModifyBg(StateType.Normal, new Gdk.Color(0xff, 0xff, 0xff));
 
-		// add events that we want to handle
+        // White background via CSS provider
+        var cssProvider = new Gtk.CssProvider();
+        cssProvider.LoadFromData("* { background-color: white; }");
+        // 600 = GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+        drawingArea.StyleContext.AddProvider(cssProvider, 600);
+
 		drawingArea.AddEvents((int)Gdk.EventMask.ButtonPressMask);
 		drawingArea.AddEvents((int)Gdk.EventMask.ButtonReleaseMask);
 		drawingArea.AddEvents((int)Gdk.EventMask.PointerMotionMask);
 		drawingArea.AddEvents((int)Gdk.EventMask.PointerMotionHintMask);
 		drawingArea.AddEvents((int)Gdk.EventMask.KeyPressMask);
 		drawingArea.AddEvents((int)Gdk.EventMask.KeyReleaseMask);
+		drawingArea.AddEvents((int)Gdk.EventMask.ScrollMask);
+		drawingArea.AddEvents((int)Gdk.EventMask.SmoothScrollMask);
 
-		drawingArea.CanFocus = true; // needed to catch key events
+		drawingArea.CanFocus = true;
 
-		hbox = new Gtk.HBox();
+		hbox = new Gtk.Box(Gtk.Orientation.Horizontal, 0);
+		hbox.PackStart(drawingArea, true,  true,  0);
+		hbox.PackStart(vscroll,     false, false, 0);
 
-		hbox.PackStart(drawingArea , true, true, 0);
-		hbox.PackStart(vscroll , false, false, 0);
-
-		this.PackStart(hbox);
+		this.PackStart(hbox, true, true, 0);
 	}
 
 	///<summary>Force a complete redraw of the view</summary>
@@ -158,64 +139,39 @@ public class DataViewDisplay : Gtk.VBox {
 		drawingArea.QueueDraw();
 	}
 
-	///<summary>
-	/// Find the number of bytes per row in order
-	/// to best utilize the available space and
-	/// keep all areas synchronized.
-	///</summary>
 	private int FindBestBpr(int width)
 	{
-		int n = 1; // current bpr
-		int bestBpr = -1; // best bpr so far
-		int swBest = 0; // width of best bpr so far
+		int n       = 1;
+		int bestBpr = -1;
+		int swBest  = 0;
 
-		// try all values for n, from 0 upwards,
-		// until the width for a given n exceeds
-		// the available or the fixed bpr of an
-		// area is exceeded
 		while (true) {
-			int sw = 0; // total width with current bpr
+			int sw             = 0;
 			bool breaksGrouping = false;
-			bool breaksFixed = false;
+			bool breaksFixed    = false;
 
-			foreach(Area a in layout.AreaGroup.Areas) {
+			foreach (Area a in layout.AreaGroup.Areas) {
 				int w = a.CalcWidth(n, false);
 
-				// if this number of bpr is not acceptable
 				if (w == -1) {
-					if (a.FixedBytesPerRow != -1 && n > a.FixedBytesPerRow )
+					if (a.FixedBytesPerRow != -1 && n > a.FixedBytesPerRow)
 						breaksFixed = true;
 					else
 						breaksGrouping = true;
 					break;
 				}
-
 				sw += w;
 			}
 
-			// If current bpr breaks a fixed size area
-			// stop searching and use the last bpr value
-			// that did't break it.
-			// If there isn't such an area, keep searching
 			if (breaksFixed && bestBpr != -1)
 				break;
 
-			// if current bpr breaks grouping, skip it
 			if (!breaksGrouping) {
-				bool shouldBreak = false;
+				bool shouldBreak = (sw > width || sw == swBest);
 
-				// stop searching if available width is exceeded
-				// or last best width value equals current one
-				if (sw > width || sw == swBest)
-					shouldBreak = true;
-
-				// if we should break, but haven't found a suitable
-				// width yet, mark the current width as best so far
-				// even if it violates available width constraints.
-				if ((shouldBreak && bestBpr == -1) || (!shouldBreak)) {
-					// keep best bpr so far
+				if ((shouldBreak && bestBpr == -1) || !shouldBreak) {
 					bestBpr = n;
-					swBest = sw;
+					swBest  = sw;
 				}
 
 				if (shouldBreak)
@@ -231,34 +187,28 @@ public class DataViewDisplay : Gtk.VBox {
 	///<summary>Benchmark the rendering</summary>
 	public void Benchmark()
 	{
-
 		System.DateTime t1;
 		System.DateTime t2;
-
 		int sum = 0;
 
-		Gdk.Window win = drawingArea.GdkWindow;
 		Gdk.Rectangle alloc = drawingArea.Allocation;
 		Gdk.Rectangle rect1 = new Gdk.Rectangle(0, 0, alloc.Width, alloc.Height);
 
 		for (int i = 0; i < 100; i++) {
 			t1 = System.DateTime.Now;
 
-			win.BeginPaintRect(rect1);
-
-			layout.AreaGroup.Render(true);
-
-			win.EndPaint();
+            var benchSurf = new Cairo.ImageSurface(Cairo.Format.Argb32, rect1.Width, rect1.Height);
+            using (Cairo.Context cr = new Cairo.Context(benchSurf)) {
+				layout.AreaGroup.Render(true, cr);
+			}
+			benchSurf.Dispose();
 
 			t2 = System.DateTime.Now;
-
 			sum += (t2 - t1).Milliseconds;
 		}
 
-
 		Gdk.Rectangle rect = drawingArea.Allocation;
 		Console.WriteLine("100 render screen ({0},{1}): {2} ms", rect.Width, rect.Height, sum / 100);
-
 	}
 
 	private void SetupScrollbarRange()
@@ -266,105 +216,78 @@ public class DataViewDisplay : Gtk.VBox {
 		if (layout.AreaGroup.Areas.Count <= 0)
 			return;
 
-		long bpr = ((Area)layout.AreaGroup.Areas[0]).BytesPerRow;
-		long nrows = ((dataView.Buffer.Size + 1) / bpr); // +1 because of append cursor position
+		long bpr  = ((Area)layout.AreaGroup.Areas[0]).BytesPerRow;
+		long nrows = ((dataView.Buffer.Size + 1) / bpr);
 
 		if (nrows < vscroll.Adjustment.PageSize) {
 			vscroll.Value = 0;
-			// set adjustment manually instead of using SetRange
-			// because gtk+ complains if low==high in SetRange()
 			vscroll.Adjustment.Lower = 0;
 			vscroll.Adjustment.Upper = nrows;
 			vscroll.Hide();
-		}
-		else if ((dataView.Buffer.Size + 1) % bpr == 0) {
+		} else if ((dataView.Buffer.Size + 1) % bpr == 0) {
 			vscroll.SetRange(0, nrows);
 			vscroll.Show();
-		}
-		else {
+		} else {
 			vscroll.SetRange(0, nrows + 1);
 			vscroll.Show();
 		}
-
 	}
 
-	///<summary>Handles window resizing</summary>
 	private void Resize(int winWidth, int winHeight)
 	{
-		// find bytes per row...
 		int bpr = FindBestBpr(winWidth);
 
-		// Ensure our offset is always aligned with bpr
 		if (bpr > 0)
 			layout.AreaGroup.Offset = (layout.AreaGroup.Offset / bpr) * bpr;
 
-		// configure areas
-		int s = 0;
+		int s          = 0;
 		int fontHeight = winHeight;
-		foreach(Area a in layout.AreaGroup.Areas) {
-			a.Height = winHeight;
-			a.Width = a.CalcWidth(bpr, true);
-			a.X = s;
+
+		foreach (Area a in layout.AreaGroup.Areas) {
+			a.Height      = winHeight;
+			a.Width       = a.CalcWidth(bpr, true);
+			a.X           = s;
 			a.BytesPerRow = bpr;
 			s += a.Width;
-			if (a.Drawer.Height < fontHeight) {
+			if (a.Drawer.Height < fontHeight)
 				fontHeight = a.Drawer.Height;
-			}
 		}
 
-		// configure scrollbar
 		vscroll.Adjustment.PageSize = (winHeight / fontHeight);
 		vscroll.SetIncrements(3, vscroll.Adjustment.PageSize - 1);
 
-		// decide whether the scrollbar is visible
-		// and its range
-		if (bpr == 0) {
-			// this can cause eternal loop!
-			// because hiding the scrollbar changes the
-			// area and causes a reconfigure which may
-			// show it again, and so on
-			//vscroll.Hide();
-		}
-		else
+		if (bpr != 0)
 			SetupScrollbarRange();
-			
+
 		layout.AreaGroup.Invalidate();
 	}
 
-	///<summary>Handle the Configure Event</summary>
-	void OnConfigured (object o, ConfigureEventArgs args)
+	void OnConfigured(object o, ConfigureEventArgs args)
 	{
 		if (widgetRealized == false)
 			return;
-		
+
 		Gdk.EventConfigure conf = args.Event;
-
 		Resize(conf.Width, conf.Height);
-
-		// make sure the current offset is visible
 		MakeOffsetVisible(dataView.Offset, ShowType.Start);
 	}
 
-	///<summary>Handle the Expose Event</summary>
-	void OnExposed (object o, ExposeEventArgs args)
+	///<summary>Handle the Drawn Event (GTK3 replacement for ExposeEvent)</summary>
+	void OnDrawn(object o, DrawnArgs args)
 	{
-		layout.AreaGroup.Render(true);
+		layout.AreaGroup.Render(true, args.Cr);
 	}
 
-	///<summary>Handle the Realized Event</summary>
-	void OnRealized (object o, EventArgs args)
+	void OnRealized(object o, EventArgs args)
 	{
-		// Create some default areas
 		layout.Realize(drawingArea);
 		widgetRealized = true;
 
-		// now we can configure properly
 		Gdk.Rectangle alloc = ((Widget)o).Allocation;
 		Resize(alloc.Width, alloc.Height);
 	}
 
-	///<summary>Handle scrolling</summary>
-	void OnScrolled (object o, EventArgs args)
+	void OnScrolled(object o, EventArgs args)
 	{
 		int bpr = 0;
 		if (layout.AreaGroup.Areas.Count > 0)
@@ -374,45 +297,31 @@ public class DataViewDisplay : Gtk.VBox {
 		layout.AreaGroup.Offset = offset;
 	}
 
-	///<summary>Scroll the view so that offset is visible</summary>
 	public void MakeOffsetVisible(long offset, ShowType type)
 	{
 		if (layout.AreaGroup.Areas.Count <= 0)
 			return;
 
-		int	bpr = ((Area)layout.AreaGroup.Areas[0]).BytesPerRow;
+		int bpr = ((Area)layout.AreaGroup.Areas[0]).BytesPerRow;
 		if (bpr == 0)
-			return ;
+			return;
 
-		long curOffset = layout.AreaGroup.Offset;
-		int h = ((Area)layout.AreaGroup.Areas[0]).Height;
-		Drawer font = ((Area)layout.AreaGroup.Areas[0]).Drawer;
-		int nrows = h / font.Height;
+		long curOffset    = layout.AreaGroup.Offset;
+		int h             = ((Area)layout.AreaGroup.Areas[0]).Height;
+		Drawer font       = ((Area)layout.AreaGroup.Areas[0]).Drawer;
+		int nrows         = h / font.Height;
 
-		long curOffsetRow = curOffset / bpr;
+		long curOffsetRow    = curOffset / bpr;
 		long curOffsetEndRow = curOffsetRow + nrows - 1;
-		long offsetRow = offset / bpr;
-
-		//System.Console.WriteLine("curOffRow: {0} curOffEndRow: {1} offRow: {2}",
-		//						curOffsetRow, curOffsetEndRow, offsetRow);
+		long offsetRow       = offset / bpr;
 
 		if (type == ShowType.Closest) {
-			// if already visible do nothing
-			//if (offsetRow >= curOffsetRow && offsetRow <= curOffsetEndRow)
-			//	;
 			if (curOffsetRow > offsetRow)
 				type = ShowType.Start;
 			else if (curOffsetEndRow < offsetRow)
 				type = ShowType.End;
 		}
 
-		// Make sure scrollbar range is updated.
-		// We need to call this here because
-		// a buffer change does not immediately
-		// update the range (eg callback goes through GLib.Idle)
-		// and a call to MakeOffsetVisible before
-		// the update will not behave correctly.
-		// eg see DataView.Paste()
 		SetupScrollbarRange();
 
 		if (type == ShowType.Cursor) {
@@ -421,7 +330,6 @@ public class DataViewDisplay : Gtk.VBox {
 
 			if (diff <= nrows && diff >= 0)
 				vscroll.Value = offsetRow - diff;
-			// else if diff is outside of a full screen range...
 			else if (diff > nrows)
 				type = ShowType.End;
 			else if (diff < 0)
@@ -430,8 +338,7 @@ public class DataViewDisplay : Gtk.VBox {
 
 		if (type == ShowType.Start) {
 			vscroll.Value = offsetRow;
-		}
-		else if (type == ShowType.End) {
+		} else if (type == ShowType.End) {
 			if (offsetRow - nrows >= 0)
 				vscroll.Value = offsetRow - nrows + 1;
 			else
@@ -439,10 +346,6 @@ public class DataViewDisplay : Gtk.VBox {
 		}
 	}
 
-	///<summary>
-	/// Show a warning that the file has been changed
-	/// outside of the respective DataView
-	///</summary>
 	public void ShowFileChangedBar()
 	{
 		if (fileChangedBar == null) {
@@ -457,8 +360,8 @@ public class DataViewDisplay : Gtk.VBox {
 	public void Cleanup()
 	{
 		layout.DisposePixmaps();
-		layout = null;
-		dataView = null;
+		layout    = null;
+		dataView  = null;
 		dvControl = null;
 	}
 
@@ -468,38 +371,36 @@ public class DataViewDisplay : Gtk.VBox {
 			drawingArea.GrabFocus();
 	}
 
-
-
 	private void ConnectToControl()
 	{
 		if (dvControl == null)
 			return;
 
-		drawingArea.ButtonPressEvent += dvControl.OnButtonPress;
+		drawingArea.ButtonPressEvent   += dvControl.OnButtonPress;
 		drawingArea.ButtonReleaseEvent += dvControl.OnButtonRelease;
-		drawingArea.MotionNotifyEvent += dvControl.OnMotionNotify;
-		drawingArea.KeyPressEvent += dvControl.OnKeyPress;
-		drawingArea.KeyReleaseEvent += dvControl.OnKeyRelease;
-		drawingArea.ScrollEvent += dvControl.OnMouseWheel;
-		drawingArea.FocusInEvent += dvControl.OnFocusInEvent;
-		drawingArea.FocusOutEvent += dvControl.OnFocusOutEvent;
+		drawingArea.MotionNotifyEvent  += dvControl.OnMotionNotify;
+		drawingArea.KeyPressEvent      += dvControl.OnKeyPress;
+		drawingArea.KeyReleaseEvent    += dvControl.OnKeyRelease;
+		drawingArea.ScrollEvent        += dvControl.OnMouseWheel;
+		drawingArea.FocusInEvent       += dvControl.OnFocusInEvent;
+		drawingArea.FocusOutEvent      += dvControl.OnFocusOutEvent;
 	}
 
 	private void DisconnectFromControl()
 	{
-		// disconnect previous control
 		if (dvControl == null)
 			return;
-		drawingArea.ButtonPressEvent -= dvControl.OnButtonPress;
+
+		drawingArea.ButtonPressEvent   -= dvControl.OnButtonPress;
 		drawingArea.ButtonReleaseEvent -= dvControl.OnButtonRelease;
-		drawingArea.MotionNotifyEvent -= dvControl.OnMotionNotify;
-		drawingArea.KeyPressEvent -= dvControl.OnKeyPress;
-		drawingArea.KeyReleaseEvent -= dvControl.OnKeyRelease;
-		drawingArea.ScrollEvent -= dvControl.OnMouseWheel;
-		drawingArea.FocusInEvent -= dvControl.OnFocusInEvent;
-		drawingArea.FocusOutEvent -= dvControl.OnFocusOutEvent;
+		drawingArea.MotionNotifyEvent  -= dvControl.OnMotionNotify;
+		drawingArea.KeyPressEvent      -= dvControl.OnKeyPress;
+		drawingArea.KeyReleaseEvent    -= dvControl.OnKeyRelease;
+		drawingArea.ScrollEvent        -= dvControl.OnMouseWheel;
+		drawingArea.FocusInEvent       -= dvControl.OnFocusInEvent;
+		drawingArea.FocusOutEvent      -= dvControl.OnFocusOutEvent;
 	}
 
-}// end DataView
+}// end DataViewDisplay
 
 }//namespace

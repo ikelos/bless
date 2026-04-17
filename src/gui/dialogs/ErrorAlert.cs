@@ -30,7 +30,7 @@ public class ErrorAlert : Alert
 	public ErrorAlert(string primary, string secondary, Gtk.Window parent)
 			: base(primary, secondary, parent)
 	{
-		image.SetFromStock(Gtk.Stock.DialogError, Gtk.IconSize.Dialog);
+		image.SetFromIconName("dialog-error", Gtk.IconSize.Dialog);
 		this.AddButton(Gtk.Stock.Ok, ResponseType.Ok);
 
 		this.ShowAll();

@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <interface>
-  <object class="GtkHBox" id="ProgressBarHBox">
+  <object class="GtkBox" id="ProgressBarHBox">
+    <property name="orientation">horizontal</property>
     <property name="visible">True</property>
     <property name="border_width">6</property>
     <property name="spacing">6</property>
@@ -13,9 +14,13 @@
     <child>
       <object class="GtkButton" id="CancelButton">
         <property name="visible">True</property>
-        <property name="label" translatable="no">gtk-cancel</property>
-        <property name="use_stock">True</property>
-        <signal handler="OnCancelButtonClicked" name="clicked"/>
+                <signal handler="OnCancelButtonClicked" name="clicked"/>
+          <child>
+            <object class="GtkImage">
+              <property name="visible">True</property>
+              <property name="icon-name">process-stop</property>
+            </object>
+          </child>
       </object>
       <packing>
         <property name="expand">False</property>

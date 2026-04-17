@@ -77,11 +77,10 @@ public class LayoutSelectionDialog : Dialog {
 		this.DefaultHeight = 300;
 		this.Modal = false;
 		this.BorderWidth = 6;
-		this.HasSeparator = false;
 		this.AddButton(Gtk.Stock.Close, ResponseType.Close);
 		this.AddButton(Gtk.Stock.Ok, ResponseType.Ok);
 		this.Response += new ResponseHandler(OnDialogResponse);
-		this.VBox.Add(LayoutSelectionPaned);
+		this.ContentArea.Add(LayoutSelectionPaned);
 	}
 
 	///<summary>Populate the layout list</summary>
@@ -122,7 +121,7 @@ public class LayoutSelectionDialog : Dialog {
 	public void OnLayoutListSelectionChanged (object o, EventArgs args)
 	{
 		TreeSelection sel = (TreeSelection)o;
-		TreeModel tm;
+		Gtk.ITreeModel tm;
 		TreeIter ti;
 
 		if (sel.GetSelected(out tm, out ti)) {

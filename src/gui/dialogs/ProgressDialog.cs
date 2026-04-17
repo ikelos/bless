@@ -30,7 +30,7 @@ namespace Bless.Gui.Dialogs {
 ///</summary>
 public class ProgressDialog : Gtk.Window {
 
-	[Gtk.Builder.Object] Gtk.VBox ProgressVBox;
+	[Gtk.Builder.Object] Gtk.Box ProgressVBox;
 	[Gtk.Builder.Object] Gtk.ProgressBar ProgressBar;
 	[Gtk.Builder.Object] Gtk.Label MessageLabel;
 	[Gtk.Builder.Object] Gtk.Label DetailsLabel;

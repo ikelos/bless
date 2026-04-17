@@ -55,7 +55,7 @@ public class ProgressDisplayPlugin : GuiPlugin
 		// register the service
 		Services.UI.Progress = widget;
 
-		((VBox)mainWindow.Child).PackEnd(widget, false, false, 0);
+		((Gtk.Box)mainWindow.Child).PackEnd(widget, false, false, 0);
 
 		loaded = true;
 		return true;
@@ -66,12 +66,12 @@ public class ProgressDisplayPlugin : GuiPlugin
 ///<summary>
 /// Widget that displays a series of progress bars
 ///</summary>
-public class ProgressDisplayWidget : Gtk.VBox, IProgressDisplay
+public class ProgressDisplayWidget : Gtk.Box, IProgressDisplay
 {
 
 	public ProgressDisplayWidget()
+		: base(Gtk.Orientation.Vertical, 0)
 	{
-
 	}
 
 	///<summary>
@@ -81,7 +81,7 @@ public class ProgressDisplayWidget : Gtk.VBox, IProgressDisplay
 	{
 		ProgressDisplayBar pdb = new ProgressDisplayBar();
 
-		this.PackStart(pdb);
+		this.PackStart(pdb, false, false, 0);
 		pdb.DestroyEvent += OnProgressDisplayBarDestroyed;
 
 		return pdb.Update;
@@ -98,15 +98,16 @@ public class ProgressDisplayWidget : Gtk.VBox, IProgressDisplay
 
 }
 
-public class ProgressDisplayBar : Gtk.HBox {
+public class ProgressDisplayBar : Gtk.Box {
 
-	[Gtk.Builder.Object] Gtk.HBox ProgressBarHBox;
+	[Gtk.Builder.Object] Gtk.Box ProgressBarHBox;
 	[Gtk.Builder.Object] Gtk.Button CancelButton;
 	[Gtk.Builder.Object] Gtk.ProgressBar ProgressBar;
 
 	bool cancelClicked;
 
 	public ProgressDisplayBar()
+		: base(Gtk.Orientation.Horizontal, 0)
 	{
 		Gtk.Builder builder = new Gtk.Builder();
 		builder.AddFromFile(FileResourcePath.GetDataPath("ui", "ProgressDisplayPlugin.ui"));

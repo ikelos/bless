@@ -38,9 +38,9 @@ public class ExportDialog : Dialog
 	DataBook dataBook;
 	Gtk.Window mainWindow;
 
-	[Gtk.Builder.Object] Gtk.VBox ExportDialogVBox;
+	[Gtk.Builder.Object] Gtk.Box ExportDialogVBox;
 	[Gtk.Builder.Object] Gtk.ComboBox ExportAsCombo;
-	[Gtk.Builder.Object] Gtk.ComboBoxEntry ExportPatternComboEntry;
+	[Gtk.Builder.Object] Gtk.ComboBoxText ExportPatternComboEntry;
 	[Gtk.Builder.Object] Gtk.ProgressBar ExportProgressBar;
 	[Gtk.Builder.Object] Gtk.Entry ExportFileEntry;
 	[Gtk.Builder.Object] Gtk.RadioButton WholeFileRadio;
@@ -48,7 +48,7 @@ public class ExportDialog : Dialog
 	[Gtk.Builder.Object] Gtk.RadioButton RangeRadio;
 	[Gtk.Builder.Object] Gtk.Entry RangeFromEntry;
 	[Gtk.Builder.Object] Gtk.Entry RangeToEntry;
-	[Gtk.Builder.Object] Gtk.HBox ProgressHBox;
+	[Gtk.Builder.Object] Gtk.Box ProgressHBox;
 	Gtk.Button CloseButton;
 	Gtk.Button ExportButton;
 
@@ -79,7 +79,6 @@ public class ExportDialog : Dialog
 		SetupExportPlugins();
 
 		ExportPatternComboEntry.Model = new ListStore (typeof (string));
-		ExportPatternComboEntry.TextColumn = 0;
 		LoadFromPatternFile((ListStore)ExportPatternComboEntry.Model);
 
 		ProgressHBox.Visible = false;
@@ -87,11 +86,10 @@ public class ExportDialog : Dialog
 
 		this.Modal = false;
 		this.BorderWidth = 6;
-		this.HasSeparator = false;
 		CloseButton = (Gtk.Button)this.AddButton(Gtk.Stock.Close, ResponseType.Close);
 		ExportButton = (Gtk.Button)this.AddButton(Catalog.GetString("Export"), ResponseType.Ok);
 		this.Response += new ResponseHandler(OnDialogResponse);
-		this.VBox.Add(ExportDialogVBox);
+		this.ContentArea.Add(ExportDialogVBox);
 	}
 
 	private void SetupExportPlugins()

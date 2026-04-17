@@ -118,9 +118,9 @@ public class SelectRangePlugin : GuiPlugin
 ///<summary>
 /// A widget for the select range operation
 ///</summary>
-public class SelectRangeWidget : Gtk.HBox
+public class SelectRangeWidget : Gtk.Box
 {
-	[Gtk.Builder.Object] Gtk.HBox SelectRangeHBox;
+	[Gtk.Builder.Object] Gtk.Box SelectRangeHBox;
 	[Gtk.Builder.Object] Gtk.Button SelectButton;
 	[Gtk.Builder.Object] Gtk.Entry FromEntry;
 	[Gtk.Builder.Object] Gtk.Entry ToEntry;
@@ -130,6 +130,7 @@ public class SelectRangeWidget : Gtk.HBox
 
 
 	public SelectRangeWidget(DataBook db)
+		: base(Gtk.Orientation.Horizontal, 0)
 	{
 		dataBook = db;
 

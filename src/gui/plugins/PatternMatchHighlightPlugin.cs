@@ -194,7 +194,7 @@ class PatternMatchPreferences : IPluginPreferences
 	}
 }
 
-class PreferencesWidget : Gtk.HBox
+class PreferencesWidget : Gtk.Box
 {
 	Gtk.CheckButton enableHighlightCheckButton;
 	
@@ -203,6 +203,7 @@ class PreferencesWidget : Gtk.HBox
 	}
 
 	public PreferencesWidget()
+		: base(Gtk.Orientation.Horizontal, 0)
 	{
 		enableHighlightCheckButton = new Gtk.CheckButton("Highlight matches of selection pattern");
 		this.PackStart(enableHighlightCheckButton, false, false, 6);

@@ -73,7 +73,7 @@ public class InfobarPlugin : GuiPlugin
 
 		Services.UI.Info = widget;
 
-		((VBox)mainWindow.Child).PackEnd(widget, false, false, 0);
+		((Gtk.Box)mainWindow.Child).PackEnd(widget, false, false, 0);
 
 		AddMenuItems(uiManager);
 
@@ -250,7 +250,7 @@ public class InfobarPlugin : GuiPlugin
 ///<summary>
 /// An advanced statusbar for Bless
 ///</summary>
-public class Infobar : Gtk.HBox, IInfoDisplay
+public class Infobar : Gtk.Box, IInfoDisplay
 {
 	Label MessageLabel;
 	Label OffsetLabel;
@@ -303,12 +303,13 @@ public class Infobar : Gtk.HBox, IInfoDisplay
 	}
 
 	public Infobar(DataBook db)
+		: base(Gtk.Orientation.Horizontal, 0)
 	{
 		dataBook = db;
 
 		MessageLabel = new Label();
 		MessageLabel.Ellipsize = Pango.EllipsizeMode.End;
-		MessageLabel.SetAlignment(0.0f, 0.5f);
+		MessageLabel.Xalign = 0.0f;
 		OffsetLabel = new Label();
 		SelectionLabel = new Label();
 		OverwriteLabel = new Label();
@@ -402,7 +403,7 @@ public class Infobar : Gtk.HBox, IInfoDisplay
 			return;
 
 		Bless.Util.Range sel = dv.Selection;
-		
+
 		string str;
 
 		if (sel.IsEmpty() == true)

@@ -61,12 +61,14 @@
       <placeholder/>
     </child>
   </object>
-  <object class="GtkVBox" id="GeneralPreferencesVBox">
+  <object class="GtkBox" id="GeneralPreferencesVBox">
+    <property name="orientation">vertical</property>
     <property name="visible">True</property>
     <property name="border_width">12</property>
     <property name="spacing">12</property>
     <child>
-      <object class="GtkVBox" id="vbox13">
+      <object class="GtkBox" id="vbox13">
+        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="spacing">6</property>
         <child>
@@ -82,7 +84,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="hbox20">
+          <object class="GtkBox" id="hbox20">
+            <property name="orientation">horizontal</property>
             <property name="visible">True</property>
             <child>
               <object class="GtkLabel" id="label48">
@@ -95,11 +98,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="vbox14">
+              <object class="GtkBox" id="vbox14">
+                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="spacing">6</property>
                 <child>
-                  <object class="GtkHBox" id="hbox21">
+                  <object class="GtkBox" id="hbox21">
+                    <property name="orientation">horizontal</property>
                     <property name="visible">True</property>
                     <property name="spacing">6</property>
                     <child>
@@ -133,13 +138,14 @@
                             <property name="xscale">0</property>
                             <property name="yscale">0</property>
                             <child>
-                              <object class="GtkHBox" id="hbox27">
+                              <object class="GtkBox" id="hbox27">
+                                <property name="orientation">horizontal</property>
                                 <property name="visible">True</property>
                                 <property name="spacing">2</property>
                                 <child>
                                   <object class="GtkImage" id="image1238">
                                     <property name="visible">True</property>
-                                    <property name="stock">gtk-open</property>
+                                    <property name="icon-name">document-open</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -210,7 +216,8 @@
       </packing>
     </child>
     <child>
-      <object class="GtkVBox" id="vbox17">
+      <object class="GtkBox" id="vbox17">
+        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="spacing">6</property>
         <child>
@@ -226,7 +233,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="hbox25">
+          <object class="GtkBox" id="hbox25">
+            <property name="orientation">horizontal</property>
             <property name="visible">True</property>
             <child>
               <object class="GtkLabel" id="label55">
@@ -246,7 +254,8 @@
                 <property name="column_spacing">6</property>
                 <property name="row_spacing">6</property>
                 <child>
-                  <object class="GtkHBox" id="hbox4">
+                  <object class="GtkBox" id="hbox4">
+                    <property name="orientation">horizontal</property>
                     <property name="visible">True</property>
                     <child>
                       <object class="GtkEntry" id="TempDirEntry">
@@ -259,7 +268,7 @@
                         <child>
                           <object class="GtkImage" id="image7">
                             <property name="visible">True</property>
-                            <property name="stock">gtk-open</property>
+                            <property name="icon-name">document-open</property>
                           </object>
                         </child>
                       </object>
@@ -295,7 +304,6 @@
                     <property name="use_underline">True</property>
                   </object>
                   <packing>
-                    <property name="x_options">GTK_FILL</property>
                     <property name="y_options"/>
                   </packing>
                 </child>
@@ -313,8 +321,6 @@
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="x_options">GTK_FILL</property>
-                    <property name="y_options">GTK_FILL</property>
                   </packing>
                 </child>
               </object>
@@ -339,7 +345,8 @@
       </packing>
     </child>
   </object>
-  <object class="GtkVBox" id="SessionPreferencesVBox">
+  <object class="GtkBox" id="SessionPreferencesVBox">
+    <property name="orientation">vertical</property>
     <property name="visible">True</property>
     <property name="border_width">12</property>
     <property name="spacing">6</property>
@@ -358,7 +365,8 @@
       </packing>
     </child>
     <child>
-      <object class="GtkHBox" id="hbox19">
+      <object class="GtkBox" id="hbox19">
+        <property name="orientation">horizontal</property>
         <property name="visible">True</property>
         <child>
           <object class="GtkLabel" id="label46">
@@ -371,7 +379,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="vbox11">
+          <object class="GtkBox" id="vbox11">
+            <property name="orientation">vertical</property>
             <property name="visible">True</property>
             <property name="spacing">6</property>
             <child>
@@ -432,12 +441,14 @@
       </packing>
     </child>
   </object>
-  <object class="GtkVBox" id="UndoPreferencesVBox">
+  <object class="GtkBox" id="UndoPreferencesVBox">
+    <property name="orientation">vertical</property>
     <property name="visible">True</property>
     <property name="border_width">12</property>
     <property name="spacing">12</property>
     <child>
-      <object class="GtkVBox" id="vbox15">
+      <object class="GtkBox" id="vbox15">
+        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="spacing">6</property>
         <child>
@@ -453,7 +464,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="hbox22">
+          <object class="GtkBox" id="hbox22">
+            <property name="orientation">horizontal</property>
             <property name="visible">True</property>
             <child>
               <object class="GtkLabel" id="label51">
@@ -466,11 +478,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="vbox16">
+              <object class="GtkBox" id="vbox16">
+                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="spacing">6</property>
                 <child>
-                  <object class="GtkHBox" id="hbox23">
+                  <object class="GtkBox" id="hbox23">
+                    <property name="orientation">horizontal</property>
                     <property name="visible">True</property>
                     <property name="spacing">6</property>
                     <child>
@@ -553,7 +567,8 @@
       </packing>
     </child>
     <child>
-      <object class="GtkVBox" id="vbox3">
+      <object class="GtkBox" id="vbox3">
+        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="spacing">6</property>
         <child>
@@ -569,7 +584,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="hbox5">
+          <object class="GtkBox" id="hbox5">
+            <property name="orientation">horizontal</property>
             <property name="visible">True</property>
             <child>
               <object class="GtkLabel" id="label13">
@@ -582,7 +598,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="vbox4">
+              <object class="GtkBox" id="vbox4">
+                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="spacing">6</property>
                 <child>

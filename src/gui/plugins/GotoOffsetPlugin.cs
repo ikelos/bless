@@ -98,9 +98,9 @@ public class GotoOffsetPlugin : GuiPlugin
 ///<summary>
 /// A widget for go to offset operation
 ///</summary>
-public class GotoOffsetWidget : Gtk.HBox
+public class GotoOffsetWidget : Gtk.Box
 {
-	[Gtk.Builder.Object] Gtk.HBox GotoOffsetHBox;
+	[Gtk.Builder.Object] Gtk.Box GotoOffsetHBox;
 	[Gtk.Builder.Object] Gtk.Button GotoOffsetButton;
 	[Gtk.Builder.Object] Gtk.Entry OffsetEntry;
 	[Gtk.Builder.Object] Gtk.Button CloseButton;
@@ -109,6 +109,7 @@ public class GotoOffsetWidget : Gtk.HBox
 
 
 	public GotoOffsetWidget(DataBook db)
+		: base(Gtk.Orientation.Horizontal, 0)
 	{
 		dataBook = db;
 

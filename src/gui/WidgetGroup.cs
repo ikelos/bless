@@ -23,10 +23,11 @@ using Gtk;
 namespace Bless.Gui
 {
 
-public class WidgetGroup : HBox
+public class WidgetGroup : Gtk.Box
 {
 
 	public WidgetGroup()
+		: base(Gtk.Orientation.Horizontal, 0)
 	{
 	}
 

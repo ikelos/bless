@@ -266,7 +266,7 @@ public class FindReplacePlugin : GuiPlugin
 ///<summary>
 /// A widget for find and replace operations
 ///</summary>
-public class FindReplaceWidget : Gtk.HBox
+public class FindReplaceWidget : Gtk.Box
 {
 	DataBook dataBook;
 	IFinder finder;
@@ -331,6 +331,7 @@ public class FindReplaceWidget : Gtk.HBox
 	}
 
 	public FindReplaceWidget(DataBook db, IFinder iFinder)
+		: base(Gtk.Orientation.Horizontal, 0)
 	{
 		finder = iFinder;
 		dataBook = db;

@@ -1,67 +1,45 @@
-// created on 6/28/2004 at 4:46 PM
 /*
  *   Copyright (c) 2004, Alexandros Frantzis (alf82 [at] freemail [dot] gr)
- *
- *   This file is part of Bless.
- *
- *   Bless is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- *   Bless is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with Bless; if not, write to the Free Software
- *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *   This file is part of Bless (GPL v2+).
  */
+using Cairo;
 
 namespace Bless.Gui.Drawers {
 
-///<summary>Draws the ascii representation of a byte</summary>
+///<summary>Draws the ASCII representation of a byte</summary>
 public class AsciiDrawer : Drawer {
 
-	// Use the Zero Width Non-Joiner character \u200c to avoid ligatures
-	static readonly string AsciiTable = "................................ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHI\u200cJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghi\u200cjklmnopqrs\u200ctuvwxyz{|}~.................................................................................................................................";
+	static readonly string AsciiTable =
+		"................................ !\"#$%&'()*+,-./0123456789:;<=>?" +
+		"@ABCDEFGHI\u200cJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghi\u200cjklmnopqrs\u200ctuvwxyz{|}~" +
+		".................................................................................................................................";
 
 	public AsciiDrawer(Gtk.Widget wid, Information inf)
-			: base(wid, inf)
+		: base(wid, inf)
 	{
 	}
 
-	protected override void Draw(Gdk.GC gc, Gdk.Drawable dest, int x, int y, byte b, Gdk.Pixmap pix)
+	protected override void Draw(Cairo.Context cr, int x, int y, byte b, Cairo.ImageSurface surf)
 	{
-		dest.DrawDrawable(gc, pix, b*width, 0, x, y, width, height);
+		BlitSurface(cr, surf, b * width, 0, x, y, width, height);
 	}
 
-	protected override Gdk.Pixmap Create(Gdk.Color fg, Gdk.Color bg)
+	protected override Cairo.ImageSurface Create(Gdk.RGBA fg, Gdk.RGBA bg)
 	{
-		Gdk.Window win = widget.GdkWindow;
+		Cairo.ImageSurface surf = new Cairo.ImageSurface(Cairo.Format.Argb32, 256 * width, height);
+		using (Cairo.Context cr = new Cairo.Context(surf)) {
+			Pango.CairoHelper.UpdateLayout(cr, pangoLayout);
 
-		Gdk.GC gc = new Gdk.GC(win);
-		Gdk.Pixmap pix = new Gdk.Pixmap(win, 256*width, height, -1);
+			cr.SetSourceRGBA(bg.Red, bg.Green, bg.Blue, bg.Alpha);
+			cr.Paint();
 
-		// draw the background
-		gc.RgbFgColor = bg;
-		pix.DrawRectangle(gc, true, 0, 0, 256*width, height);
-
-		// render the bytes
-		string s = AsciiDrawer.AsciiTable;
-
-		//System.Console.WriteLine(s);
-
-		pangoLayout.SetText(s);
-
-
-		gc.RgbFgColor = fg;
-		pix.DrawLayout(gc, 0, 0, pangoLayout);
-
-		return pix;
+			pangoLayout.SetText(AsciiTable);
+			cr.SetSourceRGBA(fg.Red, fg.Green, fg.Blue, fg.Alpha);
+			cr.MoveTo(0, 0);
+			Pango.CairoHelper.ShowLayout(cr, pangoLayout);
+		}
+		return surf;
 	}
-
 }
 
-} //namespace
+} // namespace

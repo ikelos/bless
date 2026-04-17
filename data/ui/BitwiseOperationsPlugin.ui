@@ -41,7 +41,8 @@
       </row>
     </data>
   </object>
-  <object class="GtkHBox" id="BitwiseOperationsHBox">
+  <object class="GtkBox" id="BitwiseOperationsHBox">
+    <property name="orientation">horizontal</property>
     <property name="visible">True</property>
     <property name="border_width">6</property>
     <property name="spacing">6</property>
@@ -119,9 +120,13 @@
     <child>
       <object class="GtkButton" id="DoOperationButton">
         <property name="visible">True</property>
-        <property name="label" translatable="no">gtk-execute</property>
-        <property name="use_stock">True</property>
-        <signal handler="OnDoOperationClicked" name="clicked"/>
+                <signal handler="OnDoOperationClicked" name="clicked"/>
+          <child>
+            <object class="GtkImage">
+              <property name="visible">True</property>
+              <property name="icon-name">system-run</property>
+            </object>
+          </child>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -139,7 +144,7 @@
         <child>
           <object class="GtkImage" id="image8">
             <property name="visible">True</property>
-            <property name="stock">gtk-close</property>
+            <property name="icon-name">window-close</property>
             <property name="icon_size">1</property>
           </object>
         </child>

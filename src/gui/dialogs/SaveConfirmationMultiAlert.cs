@@ -48,17 +48,17 @@ public class SaveConfirmationMultiAlert : Alert
 	{
 		fileList = list;
 
-		image.SetFromStock(Gtk.Stock.DialogWarning, Gtk.IconSize.Dialog);
+		image.SetFromIconName("dialog-warning", Gtk.IconSize.Dialog);
 
 		Label label = new Label(Catalog.GetString("\nSelect the files you want to save:\n"));
 		label.Xalign = 0.0f;
 
-		VBox vb = new VBox();
-		vb.PackStart(label);
+		Gtk.Box vb = new Gtk.Box(Gtk.Orientation.Vertical, 6);
+		vb.PackStart(label, false, false, 0);
 		treeView = CreateView(list);
-		vb.PackStart(treeView);
+		vb.PackStart(treeView, false, false, 0);
 
-		labelBox.PackStart(vb);
+		labelBox.PackStart(vb, false, false, 0);
 		labelBox.ReorderChild(vb, 1);
 
 		this.AddButton(Catalog.GetString("Close without Saving"), ResponseType.No);

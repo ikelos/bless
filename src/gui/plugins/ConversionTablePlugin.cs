@@ -111,7 +111,7 @@ public class ConversionTablePlugin : GuiPlugin
 
 
 ///<summary> A widget to convert the data at the current offset to various types</summary>
-public class ConversionTable: Gtk.HBox
+public class ConversionTable: Gtk.Box
 {
 
 	[Gtk.Builder.Object] Gtk.Table ConversionTableWidget;
@@ -141,6 +141,7 @@ public class ConversionTable: Gtk.HBox
 	bool unsignedAsHex;
 
 	public ConversionTable(DataBook db)
+		: base(Gtk.Orientation.Horizontal, 0)
 	{
 		Gtk.Builder builder = new Gtk.Builder();
 		builder.AddFromFile(FileResourcePath.GetDataPath("ui", "ConversionTablePlugin.ui"));

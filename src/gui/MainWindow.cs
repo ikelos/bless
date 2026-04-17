@@ -36,9 +36,9 @@ using Mono.Unix;
 
 public class BlessMain
 {
-	[Gtk.Builder.Object] Gtk.HBox DataViewBox;
+	[Gtk.Builder.Object] Gtk.Box DataViewBox;
 	[Gtk.Builder.Object] Gtk.Window MainWindow;
-	[Gtk.Builder.Object] Gtk.VBox MainVBox;
+	[Gtk.Builder.Object] Gtk.Box MainVBox;
 
 	const string uiXml =
 		"<menubar>" +
@@ -159,7 +159,7 @@ public class BlessMain
 		dataBook.Removed += new RemovedHandler(OnDataViewRemoved);
 		dataBook.SwitchPage += new SwitchPageHandler(OnSwitchPage);
 
-		DataViewBox.PackStart(dataBook);
+		DataViewBox.PackStart(dataBook, true, true, 0);
 
 
 		// create the widget groups that hold utility widgets

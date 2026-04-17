@@ -1,22 +1,6 @@
-// created on 6/15/2004 at 4:10 PM
 /*
  *   Copyright (c) 2004, Alexandros Frantzis (alf82 [at] freemail [dot] gr)
- *
- *   This file is part of Bless.
- *
- *   Bless is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- *   Bless is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with Bless; if not, write to the Free Software
- *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *   This file is part of Bless (GPL v2+).
  */
 using System;
 using Gtk;
@@ -30,7 +14,7 @@ public class AsciiAreaPlugin : AreaPlugin
 {
 	public AsciiAreaPlugin()
 	{
-		name = "ascii";
+		name   = "ascii";
 		author = "Alexandros Frantzis";
 	}
 
@@ -40,15 +24,14 @@ public class AsciiAreaPlugin : AreaPlugin
 	}
 }
 
-///<summary>An area that displays ascii</summary>
+///<summary>An area that displays ASCII</summary>
 public class AsciiArea : Area {
-
 
 	public AsciiArea(AreaGroup ag)
 			: base(ag)
 	{
-		type = "ascii";
-		dpb = 1;
+		type     = "ascii";
+		dpb      = 1;
 		canFocus = true;
 	}
 
@@ -58,39 +41,25 @@ public class AsciiArea : Area {
 		int ry = i * drawer.Height + y;
 		long roffset = areaGroup.Offset + i * bpr + p;
 		bool odd;
-		Gdk.GC backEvenGC = drawer.GetBackgroundGC(Drawer.RowType.Even, Drawer.HighlightType.Normal);
-		Gdk.GC backOddGC = drawer.GetBackgroundGC(Drawer.RowType.Odd, Drawer.HighlightType.Normal);
+		Gdk.RGBA backEvenColor = drawer.GetBackgroundColor(Drawer.RowType.Even, Drawer.HighlightType.Normal);
+		Gdk.RGBA backOddColor  = drawer.GetBackgroundColor(Drawer.RowType.Odd,  Drawer.HighlightType.Normal);
 
-
-		// odd row?
 		odd = (((roffset / bpr) % 2) == 1);
 
 		if (blank == true) {
-			if (odd)
-				backPixmap.DrawRectangle(backOddGC, true, rx, ry, width, drawer.Height);
-			else
-				backPixmap.DrawRectangle(backEvenGC, true, rx, ry, width, drawer.Height);
+			FillRect(odd ? backOddColor : backEvenColor, rx, ry, width, drawer.Height);
 		}
 
-		Drawer.RowType rowType;
-
-		if (odd)
-			rowType = Drawer.RowType.Odd;
-		else
-			rowType = Drawer.RowType.Even;
+		Drawer.RowType rowType = odd ? Drawer.RowType.Odd : Drawer.RowType.Even;
 
 		int pos = 0;
-
 		while (true) {
-
-			if (pos >= p) { //don't draw until we reach p
-				drawer.DrawNormal(backEvenGC, backPixmap, rx, ry, areaGroup.GetCachedByte(roffset++), rowType, Drawer.ColumnType.Even);
+			if (pos >= p) {
+				drawer.DrawNormal(backCr, rx, ry, areaGroup.GetCachedByte(roffset++), rowType, Drawer.ColumnType.Even);
 				if (--n <= 0)
 					break;
 			}
-
-			rx = rx + drawer.Width;
-
+			rx += drawer.Width;
 			pos++;
 		}
 	}
@@ -101,38 +70,25 @@ public class AsciiArea : Area {
 		int ry = i * drawer.Height + y;
 		long roffset = areaGroup.Offset + i * bpr + p;
 		bool odd;
-		Gdk.GC backEvenGC = drawer.GetBackgroundGC(Drawer.RowType.Even, Drawer.HighlightType.Normal);
-		Gdk.GC backOddGC = drawer.GetBackgroundGC(Drawer.RowType.Odd, Drawer.HighlightType.Normal);
+		Gdk.RGBA backEvenColor = drawer.GetBackgroundColor(Drawer.RowType.Even, Drawer.HighlightType.Normal);
+		Gdk.RGBA backOddColor  = drawer.GetBackgroundColor(Drawer.RowType.Odd,  Drawer.HighlightType.Normal);
 
-		// odd row?
 		odd = (((roffset / bpr) % 2) == 1);
 
 		if (blank == true) {
-			if (odd)
-				backPixmap.DrawRectangle(backOddGC, true, rx, ry, width, drawer.Height);
-			else
-				backPixmap.DrawRectangle(backEvenGC, true, rx, ry, width, drawer.Height);
+			FillRect(odd ? backOddColor : backEvenColor, rx, ry, width, drawer.Height);
 		}
 
-		Drawer.RowType rowType;
-
-		if (odd)
-			rowType = Drawer.RowType.Odd;
-		else
-			rowType = Drawer.RowType.Even;
+		Drawer.RowType rowType = odd ? Drawer.RowType.Odd : Drawer.RowType.Even;
 
 		int pos = 0;
-
 		while (true) {
-
-			if (pos >= p) { //don't draw until we reach p
-				drawer.DrawHighlight(backEvenGC, backPixmap, rx, ry, areaGroup.GetCachedByte(roffset++), rowType, ht);
+			if (pos >= p) {
+				drawer.DrawHighlight(backCr, rx, ry, areaGroup.GetCachedByte(roffset++), rowType, ht);
 				if (--n <= 0)
 					break;
 			}
-
-			rx = rx + drawer.Width;
-
+			rx += drawer.Width;
 			pos++;
 		}
 	}
@@ -141,18 +97,15 @@ public class AsciiArea : Area {
 	{
 		if (fixedBpr > 0 && n > fixedBpr && !force)
 			return -1;
-		else
-			return n*drawer.Width;
+		return n * drawer.Width;
 	}
 
 	public override void GetDisplayInfoByOffset(long off, out int orow, out int obyte, out int ox, out int oy)
 	{
-		orow = (int)((off - areaGroup.Offset) / bpr);
+		orow  = (int)((off - areaGroup.Offset) / bpr);
 		obyte = (int)((off - areaGroup.Offset) % bpr);
-
-		oy = orow * drawer.Height;
-
-		ox = obyte * drawer.Width;
+		oy    = orow * drawer.Height;
+		ox    = obyte * drawer.Width;
 	}
 
 	public override long GetOffsetByDisplayInfo(int x, int y, out int digit, out GetOffsetFlags flags)
@@ -166,32 +119,28 @@ public class AsciiArea : Area {
 			flags |= GetOffsetFlags.Eof;
 
 		digit = 0;
-
 		return off;
 	}
 
 	public override bool HandleKey(Gdk.Key key, bool overwrite)
 	{
-		//System.Console.WriteLine("Ascii: {0}", key);
 		byte[] ba = null;
 
 		if (key >= Gdk.Key.space && key <= Gdk.Key.asciitilde)
-			ba = new byte[]{(byte)key};
+			ba = new byte[] { (byte)key };
 		else if (key >= Gdk.Key.KP_0 && key <= Gdk.Key.KP_9)
-			ba = new byte[]{(byte)(key - Gdk.Key.KP_0 + Gdk.Key.Key_0)};
+			ba = new byte[] { (byte)(key - Gdk.Key.KP_0 + Gdk.Key.Key_0) };
 
 		if (ba != null) {
 			if (areaGroup.CursorOffset == areaGroup.Buffer.Size)
 				areaGroup.Buffer.Append(ba, 0, ba.LongLength);
 			else if (overwrite == true)
 				areaGroup.Buffer.Replace(areaGroup.CursorOffset, areaGroup.CursorOffset, ba);
-			else if (overwrite == false)
+			else
 				areaGroup.Buffer.Insert(areaGroup.CursorOffset, ba, 0, ba.LongLength);
-
 			return true;
 		}
-		else
-			return false;
+		return false;
 	}
 
 	public override void Realize()
@@ -202,6 +151,5 @@ public class AsciiArea : Area {
 	}
 
 }
-
 
 }//namespace

@@ -191,9 +191,9 @@ public class BitwiseOperationsPlugin : GuiPlugin
 ///<summary>
 /// A widget for bitwise operations
 ///</summary>
-public class BitwiseOperationsWidget : Gtk.HBox
+public class BitwiseOperationsWidget : Gtk.Box
 {
-	[Gtk.Builder.Object] Gtk.HBox BitwiseOperationsHBox;
+	[Gtk.Builder.Object] Gtk.Box BitwiseOperationsHBox;
 	[Gtk.Builder.Object] Gtk.Label SourceLabel;
 	[Gtk.Builder.Object] Gtk.EventBox SourceLabelEB;
 	[Gtk.Builder.Object] Gtk.Button DoOperationButton;
@@ -230,6 +230,7 @@ public class BitwiseOperationsWidget : Gtk.HBox
 	}
 
 	public BitwiseOperationsWidget(DataBook db, Gtk.Action action)
+		: base(Gtk.Orientation.Horizontal, 0)
 	{
 		dataBook = db;
 		performAction = action;

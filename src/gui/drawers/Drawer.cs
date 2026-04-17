@@ -1,4 +1,3 @@
-// created on 6/14/2004 at 10:55 PM
 /*
  *   Copyright (c) 2004, Alexandros Frantzis (alf82 [at] freemail [dot] gr)
  *
@@ -24,6 +23,7 @@ using System.Collections.Specialized;
 using Gtk;
 using Gdk;
 using Pango;
+using Cairo;
 
 namespace Bless.Gui.Drawers {
 
@@ -31,12 +31,12 @@ namespace Bless.Gui.Drawers {
 public abstract class Drawer {
 
 	public class Color {
-		public Color(Gdk.Color color)
+		public Color(Gdk.RGBA color)
 		{
-			this.GdkColor = color;
+			this.RgbaColor = color;
 		}
 
-		public Gdk.Color GdkColor;
+		public Gdk.RGBA RgbaColor;
 	}
 
 	public class Information {
@@ -58,37 +58,26 @@ public abstract class Drawer {
 
 			fgNormal = new Drawer.Color[2, 2];
 			bgNormal = new Drawer.Color[2, 2];
-			
+
 			fgHighlight = new Drawer.Color[2, (int)HighlightType.Sentinel];
 			bgHighlight = new Drawer.Color[2, (int)HighlightType.Sentinel];
 
-			for (int i = 0; i < 2; i++) {
-				fgNormal[0, i] = new Drawer.Color(Gdk.Color.Zero);
-				fgNormal[1, i] = new Drawer.Color(Gdk.Color.Zero);
-				bgNormal[0, i] = new Drawer.Color(Gdk.Color.Zero);
-				bgNormal[1, i] = new Drawer.Color(Gdk.Color.Zero);
-			}
+			fgNormal[(int)RowType.Even, (int)ColumnType.Even] = new Drawer.Color(ParseRGBA("black"));
+			bgNormal[(int)RowType.Even, (int)ColumnType.Even] = new Drawer.Color(ParseRGBA("white"));
 
-			// initialize default colors
-			Gdk.Color.Parse("black", ref fgNormal[(int)RowType.Even, (int)ColumnType.Even].GdkColor);
-			Gdk.Color.Parse("white", ref bgNormal[(int)RowType.Even, (int)ColumnType.Even].GdkColor);
+			fgNormal[(int)RowType.Even, (int)ColumnType.Odd]  = new Drawer.Color(ParseRGBA("blue"));
+			bgNormal[(int)RowType.Even, (int)ColumnType.Odd]  = new Drawer.Color(ParseRGBA("white"));
 
-			Gdk.Color.Parse("blue", ref fgNormal[(int)RowType.Even, (int)ColumnType.Odd].GdkColor);
-			Gdk.Color.Parse("white", ref bgNormal[(int)RowType.Even, (int)ColumnType.Odd].GdkColor);
+			fgNormal[(int)RowType.Odd,  (int)ColumnType.Even] = new Drawer.Color(ParseRGBA("black"));
+			bgNormal[(int)RowType.Odd,  (int)ColumnType.Even] = new Drawer.Color(ParseRGBA("white"));
 
-			Gdk.Color.Parse("black", ref fgNormal[(int)RowType.Odd, (int)ColumnType.Even].GdkColor);
-			Gdk.Color.Parse("white", ref bgNormal[(int)RowType.Odd, (int)ColumnType.Even].GdkColor);
+			fgNormal[(int)RowType.Odd,  (int)ColumnType.Odd]  = new Drawer.Color(ParseRGBA("blue"));
+			bgNormal[(int)RowType.Odd,  (int)ColumnType.Odd]  = new Drawer.Color(ParseRGBA("white"));
 
-			Gdk.Color.Parse("blue", ref fgNormal[(int)RowType.Odd, (int)ColumnType.Odd].GdkColor);
-			Gdk.Color.Parse("white", ref bgNormal[(int)RowType.Odd, (int)ColumnType.Odd].GdkColor);
-
-			// leave unspecified...
-			// if not specified by user they will
-			// be set up using theme defaults
+			// leave unspecified - will be set up using theme defaults
 			for (int i = 0; i < (int)HighlightType.Sentinel; i++) {
 				fgHighlight[(int)RowType.Even, i] = null;
 				bgHighlight[(int)RowType.Even, i] = null;
-
 				fgHighlight[(int)RowType.Odd, i] = null;
 				bgHighlight[(int)RowType.Odd, i] = null;
 			}
@@ -96,91 +85,89 @@ public abstract class Drawer {
 			Uppercase = false;
 		}
 
-		// setup unspecified hightlight colors using theme default colors
+		/// <summary>Parse a CSS colour name or spec into a Gdk.RGBA value.</summary>
+		public static Gdk.RGBA ParseRGBA(string name)
+		{
+			var c = new Gdk.RGBA();
+			c.Parse(name);
+			return c;
+		}
+
+		/// <summary>Make a colour lighter while keeping its hue</summary>
+		static Gdk.RGBA MakeRgbaLighter(Gdk.RGBA col, double factor)
+		{
+			return new Gdk.RGBA {
+				Red   = col.Red   + (1.0 - col.Red)   * factor,
+				Green = col.Green + (1.0 - col.Green) * factor,
+				Blue  = col.Blue  + (1.0 - col.Blue)  * factor,
+				Alpha = col.Alpha
+			};
+		}
+
+		/// <summary>Make a colour darker while keeping its hue</summary>
+		static Gdk.RGBA MakeRgbaDarker(Gdk.RGBA col, double factor)
+		{
+			return new Gdk.RGBA {
+				Red   = col.Red   * factor,
+				Green = col.Green * factor,
+				Blue  = col.Blue  * factor,
+				Alpha = col.Alpha
+			};
+		}
+
+		/// <summary>Setup unspecified highlight colours using theme default colours</summary>
 		public void SetupHighlight(Gtk.Widget widget)
 		{
-			Gdk.Color selFg;
-			Gdk.Color selBg;
-			Gdk.Color patMatchFg;
-			Gdk.Color patMatchBg;
+			Gdk.RGBA selFg = widget.StyleContext.GetColor(Gtk.StateFlags.Selected);
 
-			selFg = widget.Style.TextColors[(int)StateType.Selected];
-			selBg = widget.Style.BaseColors[(int)StateType.Selected];
-			patMatchBg = MakeColorLighter(selBg, 0.6);
-			patMatchFg = MakeColorDarker(selFg, 0.4);
+			Gdk.RGBA selBg;
+			if (!widget.StyleContext.LookupColor("theme_selected_bg_color", out selBg))
+				selBg = new Gdk.RGBA { Red = 0.2, Green = 0.4, Blue = 0.8, Alpha = 1.0 };
+
+			Gdk.RGBA patMatchBg = MakeRgbaLighter(selBg, 0.6);
+			Gdk.RGBA patMatchFg = MakeRgbaDarker(selFg, 0.4);
 
 			// Selection
 			if (fgHighlight[(int)RowType.Even, (int)HighlightType.Selection] == null)
 				fgHighlight[(int)RowType.Even, (int)HighlightType.Selection] = new Drawer.Color(selFg);
-
 			if (bgHighlight[(int)RowType.Even, (int)HighlightType.Selection] == null)
 				bgHighlight[(int)RowType.Even, (int)HighlightType.Selection] = new Drawer.Color(selBg);
-
 			if (fgHighlight[(int)RowType.Odd, (int)HighlightType.Selection] == null)
 				fgHighlight[(int)RowType.Odd, (int)HighlightType.Selection] = new Drawer.Color(selFg);
-
 			if (bgHighlight[(int)RowType.Odd, (int)HighlightType.Selection] == null)
 				bgHighlight[(int)RowType.Odd, (int)HighlightType.Selection] = new Drawer.Color(selBg);
 
-			// Secondary selection
+			// Pattern match (secondary selection)
 			if (fgHighlight[(int)RowType.Even, (int)HighlightType.PatternMatch] == null)
 				fgHighlight[(int)RowType.Even, (int)HighlightType.PatternMatch] = new Drawer.Color(patMatchFg);
-
 			if (bgHighlight[(int)RowType.Even, (int)HighlightType.PatternMatch] == null)
 				bgHighlight[(int)RowType.Even, (int)HighlightType.PatternMatch] = new Drawer.Color(patMatchBg);
-
 			if (fgHighlight[(int)RowType.Odd, (int)HighlightType.PatternMatch] == null)
 				fgHighlight[(int)RowType.Odd, (int)HighlightType.PatternMatch] = new Drawer.Color(patMatchFg);
-
 			if (bgHighlight[(int)RowType.Odd, (int)HighlightType.PatternMatch] == null)
 				bgHighlight[(int)RowType.Odd, (int)HighlightType.PatternMatch] = new Drawer.Color(patMatchBg);
 		}
-
-		// Make a color lighter while keeping its hue
-		Gdk.Color MakeColorLighter(Gdk.Color col, double factor)
-		{
-			Gdk.Color light = new Gdk.Color();
-
-			light.Red = (ushort)(col.Red + (ushort.MaxValue - col.Red) * factor);
-			light.Blue = (ushort)(col.Blue + (ushort.MaxValue - col.Blue) * factor);
-			light.Green = (ushort)(col.Green + (ushort.MaxValue - col.Green) * factor);
-			return light;
-		}
-
-		// Make a color darker while keeping its hue
-		Gdk.Color MakeColorDarker(Gdk.Color col, double factor)
-		{
-			Gdk.Color dark = new Gdk.Color();
-
-			dark.Red = (ushort)(col.Red * factor);
-			dark.Blue = (ushort)(col.Blue * factor);
-			dark.Green = (ushort)(col.Green * factor);
-			return dark;
-		}
 	}
-	
-	// the order of this enumeration denotes the drawing priority of each highlight type
-	// For example if a Bookmark and PatternMatch highlight are to be drawn on the same offset
-	// the PatternMatch type will be drawn. In the same manner the Selection highlight
-	// is always drawn, whereas the Normal highlight is always drawn over.
+
+	// Highlight drawing priority: Normal < Bookmark < PatternMatch < Selection
 	public enum HighlightType { Normal, Bookmark, PatternMatch, Selection, Sentinel }
 	public enum RowType { Even, Odd }
 	public enum ColumnType { Even, Odd }
 
-	// the widget the font will finally
-	// be printed on (used for info only)
 	protected Gtk.Widget widget;
 	protected Pango.FontDescription fontDescription;
 	protected Information info;
 
-	protected Gdk.Pixmap[,] pixmapsNormal;
-	protected Gdk.Pixmap[,] pixmapsHighlight;
-	protected StringCollection pixmapIds;
+	// Cairo ImageSurface-based pre-rendered character caches (replaces Gdk.Pixmap)
+	protected Cairo.ImageSurface[,] surfacesNormal;
+	protected Cairo.ImageSurface[,] surfacesHighlight;
+	protected StringCollection surfaceIds;
 
-	// pango layout used for rendering text
 	protected Pango.Layout pangoLayout;
 
-	protected Gdk.GC[,] backGC;
+	// Background colours
+	protected Gdk.RGBA[,] backColor;
+
 	protected int width;
 	protected int height;
 
@@ -189,8 +176,9 @@ public abstract class Drawer {
 	{
 		widget = wid;
 		info = inf;
-		pixmapIds = new StringCollection();
-		// make sure highlight colors are set
+		surfaceIds = new StringCollection();
+
+		// Ensure highlight colors are set from the widget's theme
 		info.SetupHighlight(wid);
 
 		fontDescription = Pango.FontDescription.FromString(info.FontName);
@@ -200,184 +188,171 @@ public abstract class Drawer {
 		pangoCtx.FontDescription = fontDescription;
 		pangoCtx.Language = lang;
 
-		// set the font height and width
+		// Measure character size using a monospaced font
 		pangoLayout = new Pango.Layout(pangoCtx);
-		// we use a monospaced font, the actual character doesn't matter
 		pangoLayout.SetText("X");
 		pangoLayout.GetPixelSize(out width, out height);
 		pangoLayout.SetText("");
 
-		// create the font pixmaps
-		InitializePixmaps();
-
-		InitializeBackgroundGCs();
+		InitializeSurfaces();
+		InitializeBackgroundColors();
 	}
 
-	void InitializePixmaps()
+	void InitializeSurfaces()
 	{
-		pixmapsNormal = new Gdk.Pixmap[2,2];
-		pixmapsHighlight = new Gdk.Pixmap[2,(int)HighlightType.Sentinel];
+		surfacesNormal    = new Cairo.ImageSurface[2, 2];
+		surfacesHighlight = new Cairo.ImageSurface[2, (int)HighlightType.Sentinel];
 
-		Drawer.Color colorFg;
-		Drawer.Color colorBg;
+		Drawer.Color colorFg, colorBg;
 
-		//even rows
+		// Even rows
 		colorFg = info.fgNormal[(int)RowType.Even, (int)ColumnType.Even];
 		colorBg = info.bgNormal[(int)RowType.Even, (int)ColumnType.Even];
-		pixmapsNormal[(int)RowType.Even, (int)ColumnType.Even] = CreateWrapper(colorFg, colorBg);
+		surfacesNormal[(int)RowType.Even, (int)ColumnType.Even] = CreateWrapper(colorFg, colorBg);
 
 		colorFg = info.fgNormal[(int)RowType.Even, (int)ColumnType.Odd];
 		colorBg = info.bgNormal[(int)RowType.Even, (int)ColumnType.Odd];
-		pixmapsNormal[(int)RowType.Even, (int)ColumnType.Odd] = CreateWrapper(colorFg, colorBg);
+		surfacesNormal[(int)RowType.Even, (int)ColumnType.Odd] = CreateWrapper(colorFg, colorBg);
 
 		colorFg = info.fgHighlight[(int)RowType.Even, (int)HighlightType.Selection];
 		colorBg = info.bgHighlight[(int)RowType.Even, (int)HighlightType.Selection];
-		pixmapsHighlight[(int)RowType.Even, (int)HighlightType.Selection] = CreateWrapper(colorFg, colorBg);
+		surfacesHighlight[(int)RowType.Even, (int)HighlightType.Selection] = CreateWrapper(colorFg, colorBg);
 
 		colorFg = info.fgHighlight[(int)RowType.Even, (int)HighlightType.PatternMatch];
 		colorBg = info.bgHighlight[(int)RowType.Even, (int)HighlightType.PatternMatch];
-		pixmapsHighlight[(int)RowType.Even, (int)HighlightType.PatternMatch] = CreateWrapper(colorFg, colorBg);
+		surfacesHighlight[(int)RowType.Even, (int)HighlightType.PatternMatch] = CreateWrapper(colorFg, colorBg);
 
-
-		//odd rows
+		// Odd rows
 		colorFg = info.fgNormal[(int)RowType.Odd, (int)ColumnType.Even];
 		colorBg = info.bgNormal[(int)RowType.Odd, (int)ColumnType.Even];
-		pixmapsNormal[(int)RowType.Odd, (int)ColumnType.Even] = CreateWrapper(colorFg, colorBg);
+		surfacesNormal[(int)RowType.Odd, (int)ColumnType.Even] = CreateWrapper(colorFg, colorBg);
 
 		colorFg = info.fgNormal[(int)RowType.Odd, (int)ColumnType.Odd];
 		colorBg = info.bgNormal[(int)RowType.Odd, (int)ColumnType.Odd];
-		pixmapsNormal[(int)RowType.Odd, (int)ColumnType.Odd] = CreateWrapper(colorFg, colorBg);
+		surfacesNormal[(int)RowType.Odd, (int)ColumnType.Odd] = CreateWrapper(colorFg, colorBg);
 
 		colorFg = info.fgHighlight[(int)RowType.Odd, (int)HighlightType.Selection];
 		colorBg = info.bgHighlight[(int)RowType.Odd, (int)HighlightType.Selection];
-		pixmapsHighlight[(int)RowType.Odd, (int)HighlightType.Selection] = CreateWrapper(colorFg, colorBg);
+		surfacesHighlight[(int)RowType.Odd, (int)HighlightType.Selection] = CreateWrapper(colorFg, colorBg);
 
 		colorFg = info.fgHighlight[(int)RowType.Odd, (int)HighlightType.PatternMatch];
 		colorBg = info.bgHighlight[(int)RowType.Odd, (int)HighlightType.PatternMatch];
-		pixmapsHighlight[(int)RowType.Odd, (int)HighlightType.PatternMatch] = CreateWrapper(colorFg, colorBg);
+		surfacesHighlight[(int)RowType.Odd, (int)HighlightType.PatternMatch] = CreateWrapper(colorFg, colorBg);
 	}
 
-	void InitializeBackgroundGCs()
+	void InitializeBackgroundColors()
 	{
-		// initialize background GCs
-		backGC = new Gdk.GC[2, (int)Drawer.HighlightType.Sentinel];
-
-		for (int i = 0; i < 2; i++)
-			for (int j = 0; j < (int)Drawer.HighlightType.Sentinel; j++)
-				backGC[i,j] = new Gdk.GC(widget.GdkWindow);
+		backColor = new Gdk.RGBA[2, (int)Drawer.HighlightType.Sentinel];
 
 		Drawer.Color col;
 
-		// normal
+		// Normal even/odd
 		col = info.bgNormal[(int)RowType.Even, (int)ColumnType.Even];
-		backGC[(int)RowType.Even, (int)HighlightType.Normal].RgbFgColor = col.GdkColor;
+		backColor[(int)RowType.Even, (int)HighlightType.Normal] = col.RgbaColor;
 
 		col = info.bgNormal[(int)RowType.Odd, (int)ColumnType.Even];
-		backGC[(int)RowType.Odd, (int)HighlightType.Normal].RgbFgColor = col.GdkColor;
+		backColor[(int)RowType.Odd, (int)HighlightType.Normal] = col.RgbaColor;
 
-		// selection
+		// Selection
 		col = info.bgHighlight[(int)RowType.Even, (int)HighlightType.Selection];
-		backGC[(int)RowType.Even, (int)HighlightType.Selection].RgbFgColor = col.GdkColor;
+		backColor[(int)RowType.Even, (int)HighlightType.Selection] = col.RgbaColor;
 
 		col = info.bgHighlight[(int)RowType.Odd, (int)HighlightType.Selection];
-		backGC[(int)RowType.Odd, (int)HighlightType.Selection].RgbFgColor = col.GdkColor;
+		backColor[(int)RowType.Odd, (int)HighlightType.Selection] = col.RgbaColor;
 
-		// secondary selection
+		// PatternMatch
 		col = info.bgHighlight[(int)RowType.Even, (int)HighlightType.PatternMatch];
-		backGC[(int)RowType.Even, (int)HighlightType.PatternMatch].RgbFgColor = col.GdkColor;
+		backColor[(int)RowType.Even, (int)HighlightType.PatternMatch] = col.RgbaColor;
 
 		col = info.bgHighlight[(int)RowType.Odd, (int)HighlightType.PatternMatch];
-		backGC[(int)RowType.Odd, (int)HighlightType.PatternMatch].RgbFgColor = col.GdkColor;
+		backColor[(int)RowType.Odd, (int)HighlightType.PatternMatch] = col.RgbaColor;
 	}
 
-	///<summary>
-	/// Wrapper around create to avoid creating pixmaps we already have
-	///</summary>
-	private Gdk.Pixmap CreateWrapper(Drawer.Color fg, Drawer.Color bg)
+	///<summary>Wrapper that avoids creating duplicate surfaces for the same fg/bg combination</summary>
+	private Cairo.ImageSurface CreateWrapper(Drawer.Color fg, Drawer.Color bg)
 	{
-		string id = PixmapManager.Instance.GetPixmapId(this.GetType(), info, fg.GdkColor, bg.GdkColor);
+		string id = PixmapManager.Instance.GetPixmapId(this.GetType(), info, fg.RgbaColor, bg.RgbaColor);
 
-		Gdk.Pixmap pix = PixmapManager.Instance.GetPixmap(id);
-		if (pix == null) {
-			pix = Create(fg.GdkColor, bg.GdkColor); // can be null for DummyDrawer
-			if (pix != null) {
-				PixmapManager.Instance.AddPixmap(id, pix);
+		Cairo.ImageSurface surf = PixmapManager.Instance.GetPixmap(id);
+		if (surf == null) {
+			surf = Create(fg.RgbaColor, bg.RgbaColor); // may return null for DummyDrawer
+			if (surf != null) {
+				PixmapManager.Instance.AddPixmap(id, surf);
 				PixmapManager.Instance.ReferencePixmap(id);
-				pixmapIds.Add(id);
+				surfaceIds.Add(id);
 			}
 		}
 		else {
 			PixmapManager.Instance.ReferencePixmap(id);
-			pixmapIds.Add(id);
+			surfaceIds.Add(id);
 		}
 
-		return pix;
+		return surf;
 	}
 
-	///<summary>Creates a pixmap with the drawn data</summary>
-	abstract protected Gdk.Pixmap Create(Gdk.Color fg, Gdk.Color bg);
+	///<summary>Creates a Cairo.ImageSurface with the pre-rendered character strip</summary>
+	abstract protected Cairo.ImageSurface Create(Gdk.RGBA fg, Gdk.RGBA bg);
 
-	///<summary>Draws the a byte</summary>
+	///<summary>Draws a single byte at (x,y) using the provided surface strip and Cairo context</summary>
+	abstract protected void Draw(Cairo.Context cr, int x, int y, byte b, Cairo.ImageSurface surf);
 
-	abstract protected void Draw(Gdk.GC gc, Gdk.Drawable dest, int x, int y, byte b, Gdk.Pixmap pix);
-
-	public void DrawNormal(Gdk.GC gc, Gdk.Drawable dest, int x, int y, byte b, RowType rowType, ColumnType colType)
+	///<summary>Copy a horizontal strip of pixels from surf to cr at (destX, destY)</summary>
+	protected static void BlitSurface(Cairo.Context cr, Cairo.ImageSurface surf,
+	                                  int srcX, int srcY, int destX, int destY,
+	                                  int w, int h)
 	{
-		Draw(gc, dest, x, y, b, pixmapsNormal[(int)rowType, (int)colType]);
+		cr.Save();
+		cr.Rectangle(destX, destY, w, h);
+		cr.Clip();
+		cr.SetSourceSurface(surf, destX - srcX, destY - srcY);
+		cr.Paint();
+		cr.Restore();
 	}
 
-	public void DrawHighlight(Gdk.GC gc, Gdk.Drawable dest, int x, int y, byte b, RowType rowType, HighlightType ht)
+	public void DrawNormal(Cairo.Context cr, int x, int y, byte b, RowType rowType, ColumnType colType)
 	{
-		Draw(gc, dest, x, y, b, pixmapsHighlight[(int)rowType, (int)ht]);
+		Draw(cr, x, y, b, surfacesNormal[(int)rowType, (int)colType]);
 	}
 
-	public Gdk.GC GetBackgroundGC(RowType rowType, HighlightType ht)
+	public void DrawHighlight(Cairo.Context cr, int x, int y, byte b, RowType rowType, HighlightType ht)
 	{
-		return backGC[(int)rowType, (int)ht];
+		Draw(cr, x, y, b, surfacesHighlight[(int)rowType, (int)ht]);
+	}
+
+	public Gdk.RGBA GetBackgroundColor(RowType rowType, HighlightType ht)
+	{
+		return backColor[(int)rowType, (int)ht];
 	}
 
 	public void DisposePixmaps()
 	{
-		foreach(string id in pixmapIds)
-		PixmapManager.Instance.DereferencePixmap(id);
-
-		pixmapIds.Clear();
+		foreach (string id in surfaceIds)
+			PixmapManager.Instance.DereferencePixmap(id);
+		surfaceIds.Clear();
 	}
 
-	public int Width{
-		get { return width; }
-	}
+	public int Width  { get { return width;  } }
+	public int Height { get { return height; } }
 
-	public int Height{
-		get { return height; }
-	}
-
-	public Drawer.Information Info{
-		get { return info; }
-	}
-
+	public Drawer.Information Info { get { return info; } }
 }
 
-///<summary>dummy</summary>
+///<summary>Dummy drawer (no-op)</summary>
 public class DummyDrawer : Drawer {
 
 	public DummyDrawer(Gtk.Widget wid, Information inf)
-			: base(wid, inf)
+		: base(wid, inf)
 	{
 	}
 
-	protected override void Draw(Gdk.GC gc, Gdk.Drawable dest, int x, int y, byte b, Gdk.Pixmap pix)
+	protected override void Draw(Cairo.Context cr, int x, int y, byte b, Cairo.ImageSurface surf)
 	{
-
 	}
 
-	protected override Gdk.Pixmap Create(Gdk.Color fg, Gdk.Color bg)
+	protected override Cairo.ImageSurface Create(Gdk.RGBA fg, Gdk.RGBA bg)
 	{
 		return null;
 	}
-
-
-
 }
 
 } // end namespace

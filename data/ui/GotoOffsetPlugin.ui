@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <interface>
-  <object class="GtkHBox" id="GotoOffsetHBox">
+  <object class="GtkBox" id="GotoOffsetHBox">
+    <property name="orientation">horizontal</property>
     <property name="visible">True</property>
     <property name="border_width">6</property>
     <property name="spacing">6</property>
@@ -40,13 +41,14 @@
             <property name="xscale">0</property>
             <property name="yscale">0</property>
             <child>
-              <object class="GtkHBox" id="hbox34">
+              <object class="GtkBox" id="hbox34">
+                <property name="orientation">horizontal</property>
                 <property name="visible">True</property>
                 <property name="spacing">2</property>
                 <child>
                   <object class="GtkImage" id="image1333">
                     <property name="visible">True</property>
-                    <property name="stock">gtk-jump-to</property>
+                    <property name="icon-name">go-jump</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -87,7 +89,7 @@
         <child>
           <object class="GtkImage" id="image1334">
             <property name="visible">True</property>
-            <property name="stock">gtk-close</property>
+            <property name="icon-name">window-close</property>
             <property name="icon_size">1</property>
           </object>
         </child>

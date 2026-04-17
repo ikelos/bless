@@ -30,7 +30,7 @@ public class WarningAlert : Alert
 	public WarningAlert(string primary, string secondary, Gtk.Window parent)
 			: base(primary, secondary, parent)
 	{
-		image.SetFromStock(Gtk.Stock.DialogWarning, Gtk.IconSize.Dialog);
+		image.SetFromIconName("dialog-warning", Gtk.IconSize.Dialog);
 
 		this.AddButton(Gtk.Stock.Cancel, ResponseType.Cancel);
 		this.AddButton(Gtk.Stock.Ok, ResponseType.Ok);

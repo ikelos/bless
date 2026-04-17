@@ -119,13 +119,14 @@ public class StatisticsInfo
 	}
 }
 
-public class StatisticsWidget : Gtk.HBox
+public class StatisticsWidget : Gtk.Box
 {
 	StatisticsDrawWidget  sdw;
 	DataBook dataBook;
 	Hashtable info;
 
 	public StatisticsWidget(DataBook db)
+		: base(Gtk.Orientation.Horizontal, 0)
 	{
 		info = new Hashtable();
 		dataBook = db;
@@ -285,12 +286,13 @@ public class StatisticsDrawWidget: Gtk.DrawingArea
 
 	void UpdateHighlight()
 	{
-		Gdk.Window win = this.GdkWindow;
+		Gdk.Window win = this.Window;
+		if (win == null) return;
 
 		Cairo.Context g = Gdk.CairoHelper.Create(win);
 
-		int x, y, w, h, d;
-		win.GetGeometry(out x, out y, out w, out h, out d);
+		int x, y, w, h;
+		win.GetGeometry(out x, out y, out w, out h);
 
 		g.Scale (w, h);
 		g.LineWidth = (1.0 / freqs.Length) * 0.6;
@@ -300,13 +302,13 @@ public class StatisticsDrawWidget: Gtk.DrawingArea
 			int end=previousHighlight+1;
 			if (start<0) start=0;
 			if (end>=barStart.Length) end=barStart.Length-1;*/
-			g.Color = new Color(0.0, 0.0, 0.0);
+			g.SetSourceRGB(0.0, 0.0, 0.0);
 			//for(int i=start; i<=end; i++)
 			DrawBar(g, previousHighlight);
 		}
 
 		if (currentHighlight != -1) {
-			g.Color = new Color(1.0, 0.0, 0.0);
+			g.SetSourceRGB(1.0, 0.0, 0.0);
 			DrawBar(g, currentHighlight);
 		}
 
@@ -315,19 +317,19 @@ public class StatisticsDrawWidget: Gtk.DrawingArea
 	void Draw (Cairo.Context gr, int width, int height)
 	{
 		gr.Scale (width, height);
-		gr.Color = new Color(1.0, 1.0, 1.0);
+		gr.SetSourceRGB(1.0, 1.0, 1.0);
 		gr.Rectangle(0.0, 0.0, 1.0, 1.0);
 		gr.Stroke();
-		gr.Color = new Color(0.0, 0.0, 0.0);
+		gr.SetSourceRGB(0.0, 0.0, 0.0);
 
 		gr.LineWidth = (1.0 / freqs.Length) * 0.6;
 
 		for (int i = 0; i < freqs.Length; i++) {
 			if (previousHighlight == i)
-				gr.Color = new Color(1.0, 0.0, 0.0);
+				gr.SetSourceRGB(1.0, 0.0, 0.0);
 			DrawBar(gr, i);
 			if (previousHighlight == i)
-				gr.Color = new Color(0.0, 0.0, 0.0);
+				gr.SetSourceRGB(0.0, 0.0, 0.0);
 		}
 
 	}
@@ -347,18 +349,13 @@ public class StatisticsDrawWidget: Gtk.DrawingArea
 		currentHighlight = -1;
 	}
 
-	protected override bool OnExposeEvent (Gdk.EventExpose args)
+	protected override bool OnDrawn(Cairo.Context g)
 	{
-		Gdk.Window win = args.Window;
-
-		Cairo.Context g = Gdk.CairoHelper.Create(win);
-
-		int x, y, w, h, d;
-		win.GetGeometry(out x, out y, out w, out h, out d);
+		Gdk.Rectangle alloc2 = this.Allocation;
+		int w = alloc2.Width;
+		int h = alloc2.Height;
 		this.HeightRequest = w / 5;
-
-		Draw (g, w, h);
-
+		Draw(g, w, h);
 		return true;
 	}
 
@@ -408,7 +405,7 @@ public class StatisticsDrawWidget: Gtk.DrawingArea
 		Gdk.ModifierType state;
 
 		if (e.IsHint)
-			this.GdkWindow.GetPointer(out x, out y, out state);
+			this.Window.GetDevicePosition(this.Display.DeviceManager.ClientPointer, out x, out y, out state);
 		else {
 			x = (int)e.X;
 			y = (int)e.Y;

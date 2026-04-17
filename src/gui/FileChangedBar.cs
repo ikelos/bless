@@ -31,17 +31,18 @@ namespace Bless.Gui
 /// A widget that notifies the user that the file has changed
 /// and prompts them to reload or ignore.
 ///</summary>
-public class FileChangedBar : Gtk.HBox
+public class FileChangedBar : Gtk.Box
 {
 	DataView dataView;
 
 	public FileChangedBar(DataView dv)
+		: base(Gtk.Orientation.Horizontal, 0)
 	{
 		dataView = dv;
 
 		this.BorderWidth = 3;
 
-		Gtk.Image img = new Gtk.Image(Gtk.Stock.DialogWarning, Gtk.IconSize.SmallToolbar);
+		Gtk.Image img = Gtk.Image.NewFromIconName("dialog-warning", Gtk.IconSize.SmallToolbar);
 
 		Gtk.Label label = new Gtk.Label(Catalog.GetString("This file has been changed on disk. You may choose to ignore the changes but reloading is the only safe option."));
 		label.LineWrap = true;

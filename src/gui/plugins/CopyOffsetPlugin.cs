@@ -190,9 +190,9 @@ class CopyOffsetPreferences : IPluginPreferences
 	}
 }
 
-class CopyOffsetPreferencesWidget : Gtk.VBox
+class CopyOffsetPreferencesWidget : Gtk.Box
 {
-	Gtk.ComboBox numberBaseCombo;
+	Gtk.ComboBoxText numberBaseCombo;
 
 	int BaseToActiveIndex(int number_base) {
 		switch (number_base) {
@@ -204,7 +204,7 @@ class CopyOffsetPreferencesWidget : Gtk.VBox
 		}
 	}
 
-	public Gtk.ComboBox NumberBaseCombo {
+	public Gtk.ComboBoxText NumberBaseCombo {
 		get { return numberBaseCombo; }
 	}
 
@@ -216,11 +216,12 @@ class CopyOffsetPreferencesWidget : Gtk.VBox
 	}
 
 	public CopyOffsetPreferencesWidget()
+		: base(Gtk.Orientation.Vertical, 0)
 	{
 		// Use a hbox inside an vbox to avoid expanding vertically.
-		Gtk.HBox hbox = new Gtk.HBox();
+		Gtk.Box hbox = new Gtk.Box(Gtk.Orientation.Horizontal, 0);
 		Gtk.Label label = new Gtk.Label(Catalog.GetString("Number base:"));
-		numberBaseCombo = Gtk.ComboBox.NewText();
+		numberBaseCombo = new Gtk.ComboBoxText();
 		numberBaseCombo.AppendText("2");
 		numberBaseCombo.AppendText("8");
 		numberBaseCombo.AppendText("10");

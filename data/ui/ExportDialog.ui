@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <interface>
-  <object class="GtkVBox" id="ExportDialogVBox">
+  <object class="GtkBox" id="ExportDialogVBox">
+    <property name="orientation">vertical</property>
     <property name="visible">True</property>
     <property name="spacing">6</property>
     <child>
@@ -11,17 +12,14 @@
         <property name="column_spacing">6</property>
         <property name="row_spacing">6</property>
         <child>
-          <object class="GtkHBox" id="hbox7">
+          <object class="GtkBox" id="hbox7">
+            <property name="orientation">horizontal</property>
             <property name="visible">True</property>
             <property name="spacing">6</property>
             <child>
-              <object class="GtkComboBoxEntry" id="ExportPatternComboEntry">
+              <object class="GtkComboBoxText" id="ExportPatternComboEntry">
+                <property name="has-entry">True</property>
                 <property name="visible">True</property>
-                <child internal-child="entry">
-                  <object class="GtkEntry" id="comboboxentry-entry1">
-                    <property name="visible">True</property>
-                  </object>
-                </child>
               </object>
             </child>
             <child>
@@ -32,7 +30,7 @@
                 <child>
                   <object class="GtkImage" id="image4">
                     <property name="visible">True</property>
-                    <property name="stock">gtk-save</property>
+                    <property name="icon-name">document-save</property>
                   </object>
                 </child>
               </object>
@@ -49,7 +47,7 @@
                 <child>
                   <object class="GtkImage" id="image5">
                     <property name="visible">True</property>
-                    <property name="stock">gtk-delete</property>
+                    <property name="icon-name">edit-delete</property>
                   </object>
                 </child>
               </object>
@@ -96,11 +94,11 @@
           <packing>
             <property name="top_attach">2</property>
             <property name="bottom_attach">3</property>
-            <property name="x_options">GTK_FILL</property>
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="hbox2">
+          <object class="GtkBox" id="hbox2">
+            <property name="orientation">horizontal</property>
             <property name="visible">True</property>
             <property name="spacing">6</property>
             <child>
@@ -115,7 +113,7 @@
                 <child>
                   <object class="GtkImage" id="image2">
                     <property name="visible">True</property>
-                    <property name="stock">gtk-open</property>
+                    <property name="icon-name">document-open</property>
                   </object>
                 </child>
               </object>
@@ -140,7 +138,6 @@
           <packing>
             <property name="top_attach">1</property>
             <property name="bottom_attach">2</property>
-            <property name="x_options">GTK_FILL</property>
           </packing>
         </child>
         <child>
@@ -151,7 +148,6 @@
             <property name="use_underline">True</property>
           </object>
           <packing>
-            <property name="x_options">GTK_FILL</property>
           </packing>
         </child>
       </object>
@@ -172,7 +168,8 @@
       </packing>
     </child>
     <child>
-      <object class="GtkHBox" id="hbox3">
+      <object class="GtkBox" id="hbox3">
+        <property name="orientation">horizontal</property>
         <property name="visible">True</property>
         <child>
           <object class="GtkLabel" id="label9">
@@ -181,7 +178,8 @@
           </object>
         </child>
         <child>
-          <object class="GtkVBox" id="vbox2">
+          <object class="GtkBox" id="vbox2">
+            <property name="orientation">vertical</property>
             <property name="visible">True</property>
             <child>
               <object class="GtkRadioButton" id="WholeFileRadio">
@@ -210,7 +208,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="hbox6">
+              <object class="GtkBox" id="hbox6">
+                <property name="orientation">horizontal</property>
                 <property name="visible">True</property>
                 <property name="spacing">6</property>
                 <child>
@@ -270,7 +269,8 @@
       </packing>
     </child>
     <child>
-      <object class="GtkHBox" id="ProgressHBox">
+      <object class="GtkBox" id="ProgressHBox">
+        <property name="orientation">horizontal</property>
         <property name="visible">True</property>
         <property name="spacing">6</property>
         <child>
@@ -281,10 +281,14 @@
         <child>
           <object class="GtkButton" id="CancelButton">
             <property name="visible">True</property>
-            <property name="label" translatable="no">gtk-cancel</property>
-            <property name="use_stock">True</property>
-            <signal handler="OnExportCancelClicked" name="clicked"/>
-          </object>
+                        <signal handler="OnExportCancelClicked" name="clicked"/>
+                  <child>
+                <object class="GtkImage">
+                  <property name="visible">True</property>
+                  <property name="icon-name">process-stop</property>
+                </object>
+              </child>
+      </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>

@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <interface>
-  <object class="GtkHBox" id="SelectRangeHBox">
+  <object class="GtkBox" id="SelectRangeHBox">
+    <property name="orientation">horizontal</property>
     <property name="visible">True</property>
     <property name="border_width">6</property>
     <property name="spacing">6</property>
@@ -61,13 +62,14 @@
             <property name="xscale">0</property>
             <property name="yscale">0</property>
             <child>
-              <object class="GtkHBox" id="hbox36">
+              <object class="GtkBox" id="hbox36">
+                <property name="orientation">horizontal</property>
                 <property name="visible">True</property>
                 <property name="spacing">2</property>
                 <child>
                   <object class="GtkImage" id="image1642">
                     <property name="visible">True</property>
-                    <property name="stock">gtk-apply</property>
+                    <property name="icon-name">emblem-default</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -107,7 +109,7 @@
         <child>
           <object class="GtkImage" id="image1643">
             <property name="visible">True</property>
-            <property name="stock">gtk-close</property>
+            <property name="icon-name">window-close</property>
             <property name="icon_size">1</property>
           </object>
         </child>

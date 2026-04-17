@@ -1,4 +1,3 @@
-// created on 7/16/2004 at 7:54 PM
 /*
  *   Copyright (c) 2004, Alexandros Frantzis (alf82 [at] freemail [dot] gr)
  *
@@ -38,11 +37,9 @@ abstract public class GroupedArea : Area {
 		canFocus = true;
 	}
 
-
 	public int Grouping {
-		set {  grouping = value; }
-		get {  return grouping; }
-
+		set { grouping = value; }
+		get { return grouping; }
 	}
 
 	protected override void RenderRowNormal(int i, int p, int n, bool blank)
@@ -51,48 +48,27 @@ abstract public class GroupedArea : Area {
 		int ry = i * drawer.Height + y;
 		long roffset = areaGroup.Offset + i * bpr + p;
 		bool odd;
-		Gdk.GC backEvenGC = drawer.GetBackgroundGC(Drawer.RowType.Even, Drawer.HighlightType.Normal);
-		Gdk.GC backOddGC = drawer.GetBackgroundGC(Drawer.RowType.Odd, Drawer.HighlightType.Normal);
+		Gdk.RGBA backEvenColor = drawer.GetBackgroundColor(Drawer.RowType.Even, Drawer.HighlightType.Normal);
+		Gdk.RGBA backOddColor  = drawer.GetBackgroundColor(Drawer.RowType.Odd,  Drawer.HighlightType.Normal);
 
-		// odd row?
 		odd = (((roffset / bpr) % 2) == 1);
 
 		if (blank == true) {
-			if (odd)
-				backPixmap.DrawRectangle(backOddGC, true, rx, ry, width, drawer.Height);
-			else
-				backPixmap.DrawRectangle(backEvenGC, true, rx, ry, width, drawer.Height);
+			FillRect(odd ? backOddColor : backEvenColor, rx, ry, width, drawer.Height);
 		}
 
 		Drawer.ColumnType colType;
-		Drawer.RowType rowType;
-
-		if (odd)
-			rowType = Drawer.RowType.Odd;
-		else
-			rowType = Drawer.RowType.Even;
+		Drawer.RowType rowType = odd ? Drawer.RowType.Odd : Drawer.RowType.Even;
 
 		int pos = 0;
-		// draw bytes
 		while (true) {
-
-			if (pos >= p) { //don't draw until we reach p
-				if ((pos / grouping) % 2 == 0)
-					colType = Drawer.ColumnType.Even;
-				else
-					colType = Drawer.ColumnType.Odd;
-
-				drawer.DrawNormal(backEvenGC, backPixmap, rx, ry, areaGroup.GetCachedByte(roffset++), rowType, colType);
+			if (pos >= p) {
+				colType = ((pos / grouping) % 2 == 0) ? Drawer.ColumnType.Even : Drawer.ColumnType.Odd;
+				drawer.DrawNormal(backCr, rx, ry, areaGroup.GetCachedByte(roffset++), rowType, colType);
 				if (--n <= 0)
 					break;
 			}
-
-			// space if necessary
-			if (pos % grouping == grouping - 1)
-				rx = rx + (dpb + 1) * drawer.Width;
-			else
-				rx = rx + dpb * drawer.Width;
-
+			rx += (pos % grouping == grouping - 1) ? (dpb + 1) * drawer.Width : dpb * drawer.Width;
 			pos++;
 		}
 	}
@@ -103,69 +79,47 @@ abstract public class GroupedArea : Area {
 		int ry = i * drawer.Height + y;
 		long roffset = areaGroup.Offset + i * bpr + p;
 		bool odd;
-		Gdk.GC backEvenGC = drawer.GetBackgroundGC(Drawer.RowType.Even, Drawer.HighlightType.Normal);
-		Gdk.GC backOddGC = drawer.GetBackgroundGC(Drawer.RowType.Odd, Drawer.HighlightType.Normal);
+		Gdk.RGBA backEvenColor = drawer.GetBackgroundColor(Drawer.RowType.Even, Drawer.HighlightType.Normal);
+		Gdk.RGBA backOddColor  = drawer.GetBackgroundColor(Drawer.RowType.Odd,  Drawer.HighlightType.Normal);
 
-		// odd row?
 		odd = (((roffset / bpr) % 2) == 1);
 
 		if (blank == true) {
-			if (odd)
-				backPixmap.DrawRectangle(backOddGC, true, rx, ry, width, drawer.Height);
-			else
-				backPixmap.DrawRectangle(backEvenGC, true, rx, ry, width, drawer.Height);
+			FillRect(odd ? backOddColor : backEvenColor, rx, ry, width, drawer.Height);
 		}
 
-		Drawer.RowType rowType;
-
-		if (odd)
-			rowType = Drawer.RowType.Odd;
-		else
-			rowType = Drawer.RowType.Even;
+		Drawer.RowType rowType = odd ? Drawer.RowType.Odd : Drawer.RowType.Even;
 
 		int pos = 0;
-		// draw bytes
 		while (true) {
-
-			if (pos >= p) { //don't draw until we reach p
-				drawer.DrawHighlight(backEvenGC, backPixmap, rx, ry, areaGroup.GetCachedByte(roffset++), rowType, ht);
+			if (pos >= p) {
+				drawer.DrawHighlight(backCr, rx, ry, areaGroup.GetCachedByte(roffset++), rowType, ht);
 				if (--n <= 0)
 					break;
 			}
-
-			// space if necessary
-			if (pos % grouping == grouping - 1)
-				rx = rx + (dpb + 1) * drawer.Width;
-			else
-				rx = rx + dpb * drawer.Width;
-
+			rx += (pos % grouping == grouping - 1) ? (dpb + 1) * drawer.Width : dpb * drawer.Width;
 			pos++;
 		}
 	}
 
 	public override int CalcWidth(int n, bool force)
 	{
-		if (n == 0)
-			return 0;
-		if (fixedBpr > 0 && n > fixedBpr && !force) // must adhere to fixed length
-			return -1;
-		if (n % grouping != 0 && !force) // can't break the grouping
-			return -1;
+		if (n == 0) return 0;
+		if (fixedBpr > 0 && n > fixedBpr && !force) return -1;
+		if (n % grouping != 0 && !force)              return -1;
 
-		int ngroups = n / grouping;
+		int ngroups   = n / grouping;
 		int groupWidth = grouping * dpb * drawer.Width;
-
-		return ngroups*groupWidth + (ngroups - 1)*drawer.Width;
+		return ngroups * groupWidth + (ngroups - 1) * drawer.Width;
 	}
 
 	public override void GetDisplayInfoByOffset(long off, out int orow, out int obyte, out int ox, out int oy)
 	{
-		orow = (int)((off - areaGroup.Offset) / bpr);
+		orow  = (int)((off - areaGroup.Offset) / bpr);
 		obyte = (int)((off - areaGroup.Offset) % bpr);
+		oy    = orow * drawer.Height;
 
-		oy = orow * drawer.Height;
-
-		int group = obyte / grouping;
+		int group       = obyte / grouping;
 		int groupOffset = obyte % grouping;
 		ox = group * (grouping * dpb * drawer.Width + drawer.Width) + dpb * drawer.Width * groupOffset;
 	}
@@ -175,8 +129,8 @@ abstract public class GroupedArea : Area {
 		flags = 0;
 		int groupWidth = (grouping * dpb * drawer.Width + drawer.Width);
 
-		int row = y / drawer.Height;
-		int group = x / groupWidth;
+		int row       = y / drawer.Height;
+		int group     = x / groupWidth;
 		int groupByte = (x - group * groupWidth) / (dpb * drawer.Width);
 
 		digit = (x - group * groupWidth - groupByte * dpb * drawer.Width) / drawer.Width;
@@ -191,7 +145,6 @@ abstract public class GroupedArea : Area {
 			flags |= GetOffsetFlags.Eof;
 
 		return off;
-
 	}
 
 	public override void Configure(XmlNode parentNode)
@@ -199,7 +152,7 @@ abstract public class GroupedArea : Area {
 		base.Configure(parentNode);
 
 		XmlNodeList childNodes = parentNode.ChildNodes;
-		foreach(XmlNode node in childNodes) {
+		foreach (XmlNode node in childNodes) {
 			if (node.Name == "grouping")
 				this.Grouping = Convert.ToInt32(node.InnerText);
 		}

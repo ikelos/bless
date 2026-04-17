@@ -31,7 +31,7 @@ public class SaveConfirmationAlert : Alert
 			: base(string.Format(Catalog.GetString("Save changes to file '{0}' before closing?"), primary),
 				   Catalog.GetString("If you don't save, all changes made since the last save will be lost."), parent)
 	{
-		image.SetFromStock(Gtk.Stock.DialogWarning, Gtk.IconSize.Dialog);
+		image.SetFromIconName("dialog-warning", Gtk.IconSize.Dialog);
 
 		this.AddButton(Catalog.GetString("Close without Saving"), ResponseType.No);
 		this.AddButton(Gtk.Stock.Cancel, ResponseType.Cancel);

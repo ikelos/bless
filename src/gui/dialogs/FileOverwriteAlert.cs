@@ -33,7 +33,7 @@ public class FileOverwriteAlert : Alert
 	public FileOverwriteAlert(string primary, Gtk.Window parent)
 			: base(string.Format(msg1, primary), msg2, parent)
 	{
-		image.SetFromStock(Gtk.Stock.DialogWarning, Gtk.IconSize.Dialog);
+		image.SetFromIconName("dialog-warning", Gtk.IconSize.Dialog);
 
 		this.AddButton(Gtk.Stock.Cancel, ResponseType.Cancel);
 		this.AddButton(Catalog.GetString("Replace"), ResponseType.Ok);
