@@ -1,3 +1,12 @@
+Bless v0.7.0 Unreleased
+-----------------------
+
+* Port to Gtk 3.22
+* Updates the drawing mechanism from pixbuf to cairo.
+* Updates Gtk.HBox/VBox to Gtk.Box
+* Handle smooth scrolling of the cairo datapane
+* Uses Gdk.RGBA rather than Gdk.Color
+
 Bless v0.6.3 20201011
 ---------------------
 

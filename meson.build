@@ -1,7 +1,7 @@
 project(
     'bless',
     'cs',
-    version: '0.6.3',
+    version: '0.7.0',
     meson_version: '>= 0.46',
     default_options: ['libdir=lib'],
 )
