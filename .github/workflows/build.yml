@@ -21,7 +21,7 @@ jobs:
         sudo apt-get install meson mono-devel
         libnunit-cil-dev nunit-console xsltproc docbook-xsl
     - name: Dotnet gtk-3 deps
-      run: >
+      run: |
         dotnet add package GtkSharp --version [3.22,4.0] --package-directory ./libs/gtksharp
         echo "GTKSHARP_LIB=$(realpath libs/gtksharp/gtksharp/*/lib/netstandard2.0)" >> $GITHUB_ENV
     - name: Setup
