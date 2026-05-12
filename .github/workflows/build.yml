@@ -13,9 +13,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v1
+    - uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '8.0.x'
     - name: Install dependencies
       run: >
-        sudo apt-get install meson mono-devel dotnet-sdk-8.0
+        sudo apt-get install meson mono-devel
         libnunit-cil-dev nunit-console xsltproc docbook-xsl
     - name: Dotnet gtk-3 deps
       run: >
