@@ -37,9 +37,21 @@ jobs:
         # Force restore to a local folder
         dotnet restore restore.csproj --packages ./libs/gtksharp
 
-        # Find the exact path for the environment variable
-        # NuGet puts things in: ./libs/gtksharp/gtksharp/<version>/lib/netstandard2.0/
-        DLL_PATH=$(find ./libs/gtksharp/gtksharp -name "gtk-sharp.dll" | head -n 1 | xargs dirname)
+
+        # 2. Find the path specifically looking for the lowercase directory structure
+        # We search inside ./libs/gtksharp for the file 'gtk-sharp.dll'
+        RELATIVE_PATH=$(find ./libs/gtksharp -name "gtk-sharp.dll" | head -n 1)
+
+        if [ -z "$RELATIVE_PATH" ]; then
+          echo "Error: Could not find gtk-sharp.dll in ./libs/gtksharp"
+          find ./libs/gtksharp -maxdepth 4
+          exit 1
+        fi
+
+        # 3. Get the absolute directory path
+        DLL_PATH=$(dirname "$(realpath "$RELATIVE_PATH")")
+
+        echo "Found GtkSharp at: $DLL_PATH"
         echo "GTKSHARP_LIB=$DLL_PATH" >> $GITHUB_ENV
 
         # Clean up the temporary project file
