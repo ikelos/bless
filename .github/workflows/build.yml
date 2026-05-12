@@ -20,10 +20,30 @@ jobs:
       run: >
         sudo apt-get install meson mono-devel
         libnunit-cil-dev nunit-console xsltproc docbook-xsl
-    - name: Dotnet gtk-3 deps
+    - name: Download gtk-sharp libraries
       run: |
-        dotnet add package GtkSharp --version [3.22,4.0] --package-directory ./libs/gtksharp
-        echo "GTKSHARP_LIB=$(realpath libs/gtksharp/gtksharp/*/lib/netstandard2.0)" >> $GITHUB_ENV
+        # Create a minimal project file on the fly
+        cat <<EOF > restore.csproj
+        <Project Sdk="Microsoft.NET.Sdk">
+          <PropertyGroup>
+            <TargetFramework>netstandard2.0</TargetFramework>
+          </PropertyGroup>
+          <ItemGroup>
+            <PackageReference Include="GtkSharp" Version="[3.24,4.0)" />
+          </ItemGroup>
+        </Project>
+        EOF
+
+        # Force restore to a local folder
+        dotnet restore restore.csproj --packages ./libs/gtksharp
+
+        # Find the exact path for the environment variable
+        # NuGet puts things in: ./libs/gtksharp/gtksharp/<version>/lib/netstandard2.0/
+        DLL_PATH=$(find ./libs/gtksharp/gtksharp -name "gtk-sharp.dll" | head -n 1 | xargs dirname)
+        echo "GTKSHARP_LIB=$DLL_PATH" >> $GITHUB_ENV
+
+        # Clean up the temporary project file
+        rm restore.csproj
     - name: Setup
       run: meson setup build
       env:
