@@ -3,68 +3,69 @@ name: build
 on:
   push:
     branches:
-    - master
+      - master
   pull_request:
     branches:
-    - master
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: '8.0.x'
-    - name: Install dependencies
-      run: >
-        sudo apt-get install meson mono-devel
-        libnunit-cil-dev nunit-console xsltproc docbook-xsl
-    - name: Download gtk-sharp libraries
-      run: |
-        # Create a minimal project file on the fly
-        cat <<EOF > restore.csproj
-        <Project Sdk="Microsoft.NET.Sdk">
-          <PropertyGroup>
-            <TargetFramework>netstandard2.0</TargetFramework>
-          </PropertyGroup>
-          <ItemGroup>
-            <PackageReference Include="GtkSharp" Version="[3.24,4.0)" />
-          </ItemGroup>
-        </Project>
-        EOF
+      - uses: actions/checkout@v1
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+      - name: Install dependencies
+        run: >
+          sudo apt-get install meson mono-devel
+          libnunit-cil-dev nunit-console xsltproc docbook-xsl
+      - name: Download gtk-sharp libraries
+        run: |
+          # Create a minimal project file on the fly
+          cat <<EOF > restore.csproj
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <TargetFramework>netstandard2.0</TargetFramework>
+            </PropertyGroup>
+            <ItemGroup>
+              <PackageReference Include="GtkSharp" Version="[3.24,4.0)" />
+            </ItemGroup>
+          </Project>
+          EOF
 
-        # Force restore to a local folder
-        dotnet restore restore.csproj --packages ./libs/gtksharp
+          # Force restore to a local folder
+          dotnet restore restore.csproj --packages ./libs/gtksharp
 
+          ALL_DLL_PATHS=$(find ./libs/gtksharp -name "*.dll" -exec dirname {} + | sort -u)
 
-        # 2. Find the path specifically looking for the lowercase directory structure
-        # We search inside ./libs/gtksharp for the file 'gtk-sharp.dll'
-        RELATIVE_PATH=$(find ./libs/gtksharp -name "gtk-sharp.dll" | head -n 1)
+          # 2. Find the path specifically looking for the lowercase directory structure
+          # We search inside ./libs/gtksharp for the file 'gtk-sharp.dll'
+          mkdir -p ./libs/flat
+          find ./libs/gtksharp -name "*.dll"-exec cp {} ./libs/flat/ \;
 
-        if [ -z "$RELATIVE_PATH" ]; then
-          echo "Error: Could not find gtk-sharp.dll in ./libs/gtksharp"
-          find ./libs/gtksharp -maxdepth 4
-          exit 1
-        fi
+          if [ ! -f "./libs/flat/gtk-sharp.dll" ]; then
+            echo "Error: Extraction failed. Contents of libs:"
+            find ./libs/gtksharp -name "*.nupkg"
+            exit 1
+          fi
 
-        # 3. Get the absolute directory path
-        DLL_PATH=$(dirname "$(realpath "$RELATIVE_PATH")")
+          # 3. Get the absolute directory path
+          FULL_PATH=$(realpath ./libs/flat)
+          echo "Found DLLs at: $FULL_PATH"
+          echo "GTKSHARP_LIB=$FULL_PATH" >> $GITHUB_ENV
 
-        echo "Found GtkSharp at: $DLL_PATH"
-        echo "GTKSHARP_LIB=$DLL_PATH" >> $GITHUB_ENV
-
-        # Clean up the temporary project file
-        rm restore.csproj
-    - name: Setup
-      run: meson setup build
-      env:
-        CSCFLAGS: "-r:${{ env.GTKSHARP_LIB }}/glib-sharp.dll -r:${{ env.GTKSHARP_LIB }}/gio-sharp.dll -r:${{ env.GTKSHARP_LIB }}/atk-sharp.dll -r:${{ env.GTKSHARP_LIB }}/gdk-sharp.dll -r:${{ env.GTKSHARP_LIB }}/gtk-sharp.dll"
-    - name: Build
-      run: ninja -C build
-    - name: Run tests
-      run: meson test -v -C build
-      env:
-        MONO_PATH: ${{ env.GTKSHARP_LIB }}
-    - name: Install
-      run: DESTDIR=/tmp/bless-install ninja -C build install
+          # Clean up the temporary project file
+          rm restore.csproj
+      - name: Setup
+        run: meson setup build
+        env:
+          CSCFLAGS: "-r:${{ env.GTKSHARP_LIB }}/glib-sharp.dll -r:${{ env.GTKSHARP_LIB }}/gio-sharp.dll -r:${{ env.GTKSHARP_LIB }}/atk-sharp.dll -r:${{ env.GTKSHARP_LIB }}/gdk-sharp.dll -r:${{ env.GTKSHARP_LIB }}/gtk-sharp.dll"
+      - name: Build
+        run: ninja -C build
+      - name: Run tests
+        run: meson test -v -C build
+        env:
+          MONO_PATH: ${{ env.GTKSHARP_LIB }}
+      - name: Install
+        run: DESTDIR=/tmp/bless-install ninja -C build install
