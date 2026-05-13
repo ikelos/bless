@@ -42,10 +42,9 @@ jobs:
           # 2. Find the path specifically looking for the lowercase directory structure
           # We search inside ./libs/gtksharp for the file 'gtk-sharp.dll'
           mkdir -p ./libs/flat
-          find ./libs/gtksharp -name "*.dll"
-          find ./libs/gtksharp -name "*.dll" -exec cp {} ./libs/flat/ \;
+          find ./libs/gtksharp -name "*Sharp.dll" -exec cp {} ./libs/flat/ \;
 
-          if [ ! -f "./libs/flat/gtk-sharp.dll" ]; then
+          if [ ! -f "./libs/flat/GtkSharp.dll" ]; then
             echo "Error: Extraction failed. Contents of libs:"
             find ./libs/gtksharp -name "*.dll"
             exit 1
