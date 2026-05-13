@@ -60,7 +60,7 @@ jobs:
       - name: Setup
         run: meson setup build
         env:
-          CSCFLAGS: "-r:${{ env.GTKSHARP_LIB }}/glib-sharp.dll -r:${{ env.GTKSHARP_LIB }}/gio-sharp.dll -r:${{ env.GTKSHARP_LIB }}/atk-sharp.dll -r:${{ env.GTKSHARP_LIB }}/gdk-sharp.dll -r:${{ env.GTKSHARP_LIB }}/gtk-sharp.dll"
+          CSCFLAGS: "-r:${{ env.GTKSHARP_LIB }}/GLibSharp.dll -r:${{ env.GTKSHARP_LIB }}/CairoSharp.dll -r:${{ env.GTKSHARP_LIB }}/PangoSharp.dll -r:${{ env.GTKSHARP_LIB }}/GioSharp.dll -r:${{ env.GTKSHARP_LIB }}/AtkSharp.dll -r:${{ env.GTKSHARP_LIB }}/GdkSharp.dll -r:${{ env.GTKSHARP_LIB }}/GtkSharp.dll"
       - name: Build
         run: ninja -C build
       - name: Run tests
